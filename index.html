@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      ألعاب الأطفال — من نتائج دورة سكراتش من مبادرة 1000 مبرمج قيادي
+    </title>
+    <meta
+      name="description"
+      content="ألعاب صمّمناها من دورة سكراتش  — العب مباشرةً في المتصفح دون حساب ودون تنصيب."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="ألعاب الأطفال — من نتائج دورة سكراتش من مبادرة 1000 مبرمج قيادي"
+    />
+    <meta
+      property="og:description"
+      content="ألعاب صمّمناها من دورة سكراتش  — العب مباشرةً في المتصفح دون حساب ودون تنصيب."
+    />
+    <meta property="og:locale" content="ar_AR" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E"
+    />
+
+    <!-- خط عربي نظيف قريب من طابع آبل (SF Arabic) للأجهزة غير الأبل -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ═══════════════════════════════════════════════
+     ألوان بطراز آبل — أبيض، رمادي فاتح، وأزرق واحد
+     ═══════════════════════════════════════════════ */
+      :root {
+        --white: #ffffff;
+        --gray-bg: #f5f5f7; /* خلفية الأقسام الرمادية */
+        --text: #1d1d1f; /* شبه أسود */
+        --text-2: #6e6e73; /* رمادي ثانوي */
+        --blue: #0071e3; /* أزرق آبل */
+        --blue-hover: #0077ed;
+        --line: #d2d2d7; /* خطوط فاصلة رفيعة */
+
+        --font:
+          -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+          "Helvetica Neue", "Tajawal", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font);
+        color: var(--text);
+        background: var(--white);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap {
+        max-width: 1000px;
+        margin-inline: auto;
+        padding: 0 22px;
+      }
+
+      /* ── شريط علوي رفيع (مثل آبل) ── */
+      .nav {
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: saturate(180%) blur(20px);
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+      }
+
+      /* ── القسم الرئيسي (Hero) ── */
+      .hero {
+        text-align: center;
+        padding: 70px 22px 56px;
+      }
+      .hero h1 {
+        font-size: clamp(38px, 6.5vw, 56px);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        line-height: 1.07;
+      }
+      .hero .sub {
+        font-size: clamp(20px, 3vw, 28px);
+        font-weight: 400;
+        color: var(--text-2);
+        margin-top: 8px;
+      }
+      .hero .lead {
+        color: var(--text-2);
+        font-size: 19px;
+        max-width: 540px;
+        margin: 20px auto 0;
+      }
+
+      /* ── قسم الألعاب على خلفية رمادية ── */
+      .section-gray {
+        background: var(--gray-bg);
+        padding: 60px 0 80px;
+      }
+      .section-title {
+        text-align: center;
+        font-size: clamp(28px, 4vw, 40px);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 44px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+      }
+
+      /* بطاقة اللعبة — نظيفة، بيضاء، حواف ناعمة، بلا ألوان صاخبة */
+      .card {
+        background: var(--white);
+        border-radius: 18px;
+        padding: 28px 24px 26px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+      }
+
+      /* مربّع الرمز — رمادي فاتح موحّد وأنيق */
+      .thumb {
+        width: 96px;
+        height: 96px;
+        border-radius: 22px;
+        background: var(--gray-bg);
+        display: grid;
+        place-items: center;
+        font-size: 46px;
+        margin-bottom: 20px;
+      }
+      .card h3 {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .card .kid {
+        color: var(--text-2);
+        font-size: 16px;
+        margin-top: 4px;
+        margin-bottom: 22px;
+      }
+
+      /* زر آبل: حبّة دواء زرقاء */
+      .btn {
+        border: none;
+        cursor: pointer;
+        background: var(--blue);
+        color: #fff;
+        font-family: var(--font);
+        font-size: 17px;
+        padding: 9px 22px;
+        border-radius: 980px;
+        transition: background 0.2s ease;
+      }
+      .btn:hover {
+        background: var(--blue-hover);
+      }
+      .btn:focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 3px;
+      }
+
+      /* ── نافذة تشغيل اللعبة ── */
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+        display: none;
+        place-items: center;
+        padding: 20px;
+        z-index: 50;
+      }
+      .modal.open {
+        display: grid;
+      }
+      .player {
+        background: var(--white);
+        border-radius: 18px;
+        width: min(900px, 100%);
+        max-height: 92vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+      }
+      .player-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      .player-bar h4 {
+        flex: 1;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .icon-btn {
+        border: none;
+        cursor: pointer;
+        background: var(--gray-bg);
+        color: var(--text);
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        font-size: 16px;
+        transition: background 0.2s ease;
+      }
+      .icon-btn:hover {
+        background: #e8e8ed;
+      }
+      .icon-btn:focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 2px;
+      }
+      .stage {
+        background: #000;
+      }
+      .stage iframe {
+        display: block;
+        width: 100%;
+        height: 62vh;
+        border: 0;
+      }
+      .hint {
+        display: none;
+        padding: 30px;
+        text-align: center;
+        color: var(--text-2);
+        font-size: 16px;
+      }
+      .hint.show {
+        display: block;
+      }
+      .hint code {
+        background: var(--gray-bg);
+        color: var(--text);
+        padding: 2px 8px;
+        border-radius: 6px;
+        direction: ltr;
+        display: inline-block;
+      }
+
+      /* ── تذييل بطراز آبل ── */
+      footer {
+        background: var(--gray-bg);
+        color: var(--text-2);
+        font-size: 14px;
+        text-align: center;
+        padding: 22px;
+        border-top: 1px solid var(--line);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+        .card:hover {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      العاب الأطفال — من نتائج دورة سكراتش من مبادرة 1000 مبرمج قيادي
+    </nav>
+
+    <section class="hero">
+      <h1>ألعابنا الجميلة.</h1>
+      <p class="sub">صمّمها بأنفسنا.</p>
+      <p class="lead">
+        اختر لعبة واضغط «العب» لتعمل مباشرةً في متصفحك — دون حساب ودون تنصيب.
+      </p>
+    </section>
+
+    <section class="section-gray">
+      <div class="wrap">
+        <h2 class="section-title">المجموعة</h2>
+        <div class="grid" id="grid"></div>
+      </div>
+    </section>
+
+    <footer>
+      صُمّمت الألعاب بواسطة مريم عمار الوائلي و احمد عمار الوائلي نتمنى ان
+      تكونوا استمتعتوا باللعب
+    </footer>
+
+    <!-- نافذة تشغيل اللعبة -->
+    <div
+      class="modal"
+      id="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="playerTitle"
+    >
+      <div class="player">
+        <div class="player-bar">
+          <h4 id="playerTitle">اللعبة</h4>
+          <button
+            class="icon-btn"
+            id="fsBtn"
+            title="ملء الشاشة"
+            aria-label="ملء الشاشة"
+          >
+            ⛶
+          </button>
+          <button
+            class="icon-btn"
+            id="closeBtn"
+            title="إغلاق"
+            aria-label="إغلاق"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="stage" id="stage">
+          <iframe id="frame" title="اللعبة" allowfullscreen></iframe>
+        </div>
+        <div class="hint" id="hint">
+          لم يُعثر على ملف هذه اللعبة بعد. ضع ملف الـ HTML الخاص بها داخل مجلد
+          <code>games/</code> ثم حدّث اسم الملف في قائمة الألعاب.
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ══════════════════════════════════════════════════════════
+   قائمة الألعاب — هنا فقط تضيف أو تعدّل الألعاب
+   لكل لعبة:  title (الاسم) · kid (اسم الطفل) ·
+              file (اسم ملف HTML داخل مجلد games/) · emoji (رمز)
+   لإضافة لعبة: انسخ سطر { ... } كاملاً وعدّل قيمه.
+   ══════════════════════════════════════════════════════════ */
+      const GAMES = [
+        {
+          title: "قصة الحقيبة المتحركة",
+          kid: "الواجب الأول",
+          file: "bag-story.html",
+          emoji: "🎒",
+        },
+        {
+          title: "مغامرة الفضاء",
+          kid: "أحمد",
+          file: "space.html",
+          emoji: "🚀",
+        },
+        { title: "قطف التفاح", kid: "سارة", file: "apples.html", emoji: "🍎" },
+        { title: "متاهة الغابة", kid: "يوسف", file: "maze.html", emoji: "🌲" },
+        { title: "سباق السيارات", kid: "ليان", file: "race.html", emoji: "🏎️" },
+        { title: "صياد النجوم", kid: "مريم", file: "stars.html", emoji: "⭐" },
+        {
+          title: "لعبة الافعى",
+          kid: "مريم",
+          file: "snake.html",
+          emoji: "🐍",
+        },
+        {
+          title: "لعبة البالون",
+          kid: "شيخ احمد",
+          file: "balloon.html",
+          emoji: "🎈",
+        },
+      ];
+
+      /* بناء البطاقات من القائمة */
+      const grid = document.getElementById("grid");
+      GAMES.forEach((g) => {
+        const card = document.createElement("article");
+        card.className = "card";
+
+        const thumb = document.createElement("div");
+        thumb.className = "thumb";
+        thumb.textContent = g.emoji;
+        thumb.setAttribute("aria-hidden", "true");
+
+        const h3 = document.createElement("h3");
+        h3.textContent = g.title;
+
+        const kid = document.createElement("p");
+        kid.className = "kid";
+        kid.textContent = `من إبداع ${g.kid}`;
+
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.type = "button";
+        btn.textContent = "العب";
+        btn.addEventListener("click", (e) => openGame(g, e.currentTarget));
+
+        card.append(thumb, h3, kid, btn);
+        grid.appendChild(card);
+      });
+
+      /* تشغيل / إغلاق نافذة اللعبة */
+      const modal = document.getElementById("modal");
+      const frame = document.getElementById("frame");
+      const stage = document.getElementById("stage");
+      const hint = document.getElementById("hint");
+      const pTitle = document.getElementById("playerTitle");
+      const closeBtn = document.getElementById("closeBtn");
+      const fsBtn = document.getElementById("fsBtn");
+
+      let lastFocused = null;
+
+      function openGame(g, triggerEl) {
+        lastFocused = triggerEl || document.activeElement;
+        pTitle.textContent = g.title;
+        hint.classList.remove("show");
+        stage.style.display = "block";
+        modal.classList.add("open");
+        document.body.style.overflow = "hidden";
+        closeBtn.focus();
+
+        frame.src = "games/" + g.file;
+      }
+      function closeGame() {
+        modal.classList.remove("open");
+        frame.src = "";
+        document.body.style.overflow = "";
+        if (lastFocused && typeof lastFocused.focus === "function")
+          lastFocused.focus();
+      }
+
+      closeBtn.addEventListener("click", closeGame);
+      fsBtn.addEventListener("click", () => {
+        const el = frame;
+        const request =
+          el.requestFullscreen ||
+          el.webkitRequestFullscreen ||
+          el.mozRequestFullScreen ||
+          el.msRequestFullscreen;
+        if (request) request.call(el);
+      });
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeGame();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (!modal.classList.contains("open")) return;
+        if (e.key === "Escape") {
+          closeGame();
+          return;
+        }
+        if (e.key === "Tab") {
+          const focusables = Array.from(
+            modal.querySelectorAll(
+              'button, [href], iframe, [tabindex]:not([tabindex="-1"])',
+            ),
+          ).filter((el) => el.offsetParent !== null);
+          if (!focusables.length) return;
+          const first = focusables[0],
+            last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
