@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>قصة الحقيبة المتحركة</title>
+<style>
+  :root{
+    --white:#fff; --gray-bg:#f5f5f7; --text:#1d1d1f; --text-2:#6e6e73;
+    --blue:#0071e3; --blue-hover:#0077ed; --line:#d2d2d7;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Tajawal",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;overflow:hidden;}
+  body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column;background:var(--gray-bg);}
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 18px;background:var(--white);border-bottom:1px solid var(--line);flex:0 0 auto;
+  }
+  header h1{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .stats{display:flex;gap:14px;font-size:14px;color:var(--text-2);font-variant-numeric:tabular-nums;}
+  .stage{position:relative;flex:1;overflow:hidden;background:linear-gradient(180deg,#fff6e0 0%,#ffe9c7 100%);touch-action:none;}
+  canvas{display:block;width:100%;height:100%;}
+  .hint-bar{
+    flex:0 0 auto;text-align:center;font-size:12px;color:var(--text-2);
+    padding:8px;background:var(--white);border-top:1px solid var(--line);
+  }
+  .overlay{
+    position:absolute;inset:0;display:none;place-items:center;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);text-align:center;padding:24px;
+  }
+  .overlay.show{display:grid;}
+  .card{max-width:300px;}
+  .card h2{font-size:22px;font-weight:600;margin-bottom:6px;}
+  .card p{color:var(--text-2);font-size:15px;margin-bottom:4px;}
+  .card .big{font-size:34px;font-weight:700;color:var(--text);margin:10px 0;}
+  .btn{
+    border:none;cursor:pointer;background:var(--blue);color:#fff;font-family:var(--font);
+    font-size:16px;padding:10px 26px;border-radius:980px;margin-top:14px;transition:background .2s ease;
+  }
+  .btn:hover{background:var(--blue-hover);}
+  .btn:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+</style>
+</head>
+<body>
+  <header>
+    <h1>🎒 قصة الحقيبة المتحركة</h1>
+    <div class="stats">
+      <span id="scoreEl">النقاط: 0</span>
+      <span id="livesEl">❤️❤️❤️</span>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="c"></canvas>
+    <div class="overlay show" id="intro">
+      <div class="card">
+        <h2>الواجب الأول 📘</h2>
+        <p>الحقيبة تتحرك وحدها ولازم نساعدها تجمع أغراض المدرسة الصحيحة فقط!</p>
+        <p>التقط 📘✏️🍎🧴 وابتعد عن 🎮⚽📺🍬</p>
+        <button class="btn" id="startBtn" type="button">ابدأ اللعب</button>
+      </div>
+    </div>
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h2>انتهت المغامرة!</h2>
+        <div class="big" id="finalScore">0</div>
+        <p>أفضل نتيجة: <span id="bestScore">0</span></p>
+        <button class="btn" id="restartBtn" type="button">العب مرة أخرى</button>
+      </div>
+    </div>
+  </div>
+  <div class="hint-bar">حرّك الحقيبة بالأسهم أو بالسحب باللمس/الفأرة · اجمع أدوات المدرسة فقط</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('scoreEl');
+const livesEl = document.getElementById('livesEl');
+const intro = document.getElementById('intro');
+const overlay = document.getElementById('overlay');
+const finalScore = document.getElementById('finalScore');
+const bestScore = document.getElementById('bestScore');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+const GOOD = ['📘', '✏️', '🍎', '🧴'];
+const BAD = ['🎮', '⚽', '📺', '🍬'];
+
+function resize(){ canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
+window.addEventListener('resize', resize);
+
+let bag = { x: 0, y: 0, w: 74, h: 50 };
+let items = [];
+let score = 0, lives = 3, best = +localStorage.getItem('bag-best') || 0;
+let running = false, last = 0, spawnTimer = 0;
+
+function resetGame(){
+  resize();
+  bag.x = canvas.width / 2;
+  bag.y = canvas.height - 50;
+  items = []; score = 0; lives = 3; spawnTimer = 0;
+  running = true;
+  overlay.classList.remove('show');
+  updateLives();
+  last = performance.now();
+  requestAnimationFrame(loop);
+}
+
+function updateLives(){ livesEl.textContent = '❤️'.repeat(Math.max(lives, 0)); }
+
+let pointerActive = false;
+function setPointer(x){
+  const rect = canvas.getBoundingClientRect();
+  bag.x = Math.min(Math.max(x - rect.left, bag.w / 2), canvas.width - bag.w / 2);
+}
+canvas.addEventListener('pointerdown', e => { pointerActive = true; setPointer(e.clientX); });
+window.addEventListener('pointermove', e => { if (pointerActive) setPointer(e.clientX); });
+window.addEventListener('pointerup', () => pointerActive = false);
+
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.key] = true; });
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+function loop(now){
+  if (!running) return;
+  const dt = Math.min((now - last) / 1000, .05);
+  last = now;
+
+  const speed = 320;
+  if (keys['ArrowLeft'])  bag.x -= speed * dt;
+  if (keys['ArrowRight']) bag.x += speed * dt;
+  bag.x = Math.min(Math.max(bag.x, bag.w / 2), canvas.width - bag.w / 2);
+
+  const difficulty = 1 + score / 250;
+  spawnTimer += dt;
+  if (spawnTimer > Math.max(1 - difficulty * .06, .35)){
+    spawnTimer = 0;
+    const bad = Math.random() < .25;
+    const emoji = bad ? BAD[Math.floor(Math.random() * BAD.length)] : GOOD[Math.floor(Math.random() * GOOD.length)];
+    items.push({ x: 20 + Math.random() * (canvas.width - 40), y: -20, r: 18, s: 130 * difficulty + Math.random() * 40, bad, emoji });
+  }
+
+  items.forEach(it => it.y += it.s * dt);
+
+  for (let i = items.length - 1; i >= 0; i--){
+    const it = items[i];
+    const caught = it.y > bag.y - bag.h / 2 && it.y < bag.y + bag.h / 2 &&
+                   Math.abs(it.x - bag.x) < bag.w / 2 + it.r * .5;
+    if (caught){
+      items.splice(i, 1);
+      if (it.bad){ lives--; updateLives(); if (lives <= 0) return gameOver(); }
+      else score += 10;
+      continue;
+    }
+    if (it.y > canvas.height + 30) items.splice(i, 1);
+  }
+
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function draw(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '46px ' + EMOJI_FONT;
+  ctx.fillText('🎒', bag.x, bag.y);
+  items.forEach(it => {
+    ctx.font = (it.r * 2) + 'px ' + EMOJI_FONT;
+    ctx.fillText(it.emoji, it.x, it.y);
+  });
+  scoreEl.textContent = 'النقاط: ' + score;
+}
+
+function gameOver(){
+  running = false;
+  if (score > best){ best = score; localStorage.setItem('bag-best', best); }
+  finalScore.textContent = score;
+  bestScore.textContent = best;
+  overlay.classList.add('show');
+}
+
+startBtn.addEventListener('click', () => { intro.classList.remove('show'); resetGame(); });
+restartBtn.addEventListener('click', resetGame);
+resize();
+</script>
+</body>
+</html>
