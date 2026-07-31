@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>صياد النجوم</title>
+<style>
+  :root{
+    --white:#fff; --gray-bg:#f5f5f7; --text:#1d1d1f; --text-2:#6e6e73;
+    --blue:#0071e3; --blue-hover:#0077ed; --line:#d2d2d7;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Tajawal",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;overflow:hidden;}
+  body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column;background:var(--gray-bg);}
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 18px;background:var(--white);border-bottom:1px solid var(--line);flex:0 0 auto;
+  }
+  header h1{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .stats{display:flex;gap:14px;font-size:14px;color:var(--text-2);font-variant-numeric:tabular-nums;}
+  .stage{position:relative;flex:1;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#1c1440 0%,#0a0821 75%);touch-action:none;}
+  canvas{display:block;width:100%;height:100%;}
+  .hint-bar{
+    flex:0 0 auto;text-align:center;font-size:12px;color:var(--text-2);
+    padding:8px;background:var(--white);border-top:1px solid var(--line);
+  }
+  .overlay{
+    position:absolute;inset:0;display:none;place-items:center;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);text-align:center;padding:24px;
+  }
+  .overlay.show{display:grid;}
+  .card{max-width:280px;}
+  .card h2{font-size:22px;font-weight:600;margin-bottom:6px;}
+  .card p{color:var(--text-2);font-size:15px;margin-bottom:4px;}
+  .card .big{font-size:34px;font-weight:700;color:var(--text);margin:10px 0;}
+  .btn{
+    border:none;cursor:pointer;background:var(--blue);color:#fff;font-family:var(--font);
+    font-size:16px;padding:10px 26px;border-radius:980px;margin-top:14px;transition:background .2s ease;
+  }
+  .btn:hover{background:var(--blue-hover);}
+  .btn:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+</style>
+</head>
+<body>
+  <header>
+    <h1>⭐ صياد النجوم</h1>
+    <div class="stats">
+      <span id="scoreEl">النقاط: 0</span>
+      <span id="timeEl">الوقت: 30</span>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="c"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h2>انتهى الوقت!</h2>
+        <div class="big" id="finalScore">0</div>
+        <p>أفضل نتيجة: <span id="bestScore">0</span></p>
+        <button class="btn" id="restartBtn" type="button">العب مرة أخرى</button>
+      </div>
+    </div>
+  </div>
+  <div class="hint-bar">اضغط أو المس النجوم ⭐ قبل أن تختفي · كلما أسرعت زادت نقاطك</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('scoreEl');
+const timeEl = document.getElementById('timeEl');
+const overlay = document.getElementById('overlay');
+const finalScore = document.getElementById('finalScore');
+const bestScore = document.getElementById('bestScore');
+const restartBtn = document.getElementById('restartBtn');
+const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+function resize(){ canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
+window.addEventListener('resize', resize);
+
+const GAME_TIME = 30;
+let stars = [], score = 0, best = +localStorage.getItem('stars-best') || 0;
+let running = false, last = 0, spawnTimer = 0, timeLeft = GAME_TIME;
+let bgDots = [];
+
+function resetGame(){
+  resize();
+  bgDots = Array.from({ length: 60 }, () => ({
+    x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.6 + .3
+  }));
+  stars = []; score = 0; spawnTimer = 0; timeLeft = GAME_TIME;
+  running = true;
+  overlay.classList.remove('show');
+  last = performance.now();
+  requestAnimationFrame(loop);
+}
+
+function hitTest(x, y){
+  const rect = canvas.getBoundingClientRect();
+  const px = x - rect.left, py = y - rect.top;
+  for (let i = stars.length - 1; i >= 0; i--){
+    const s = stars[i];
+    if (Math.hypot(px - s.x, py - s.y) < s.r + 8){
+      stars.splice(i, 1);
+      score += 10;
+      return;
+    }
+  }
+}
+canvas.addEventListener('pointerdown', e => hitTest(e.clientX, e.clientY));
+
+function loop(now){
+  if (!running) return;
+  const dt = Math.min((now - last) / 1000, .05);
+  last = now;
+
+  timeLeft -= dt;
+  if (timeLeft <= 0) return gameOver();
+
+  spawnTimer += dt;
+  if (spawnTimer > .7){
+    spawnTimer = 0;
+    const r = 16 + Math.random() * 10;
+    stars.push({
+      x: r + Math.random() * (canvas.width - r * 2),
+      y: r + Math.random() * (canvas.height - r * 2),
+      r, life: 0, maxLife: 1.6 + Math.random() * .6
+    });
+  }
+  for (let i = stars.length - 1; i >= 0; i--){
+    stars[i].life += dt;
+    if (stars[i].life > stars[i].maxLife) stars.splice(i, 1);
+  }
+
+  draw();
+  timeEl.textContent = 'الوقت: ' + Math.ceil(timeLeft);
+  scoreEl.textContent = 'النقاط: ' + score;
+  requestAnimationFrame(loop);
+}
+
+function draw(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(255,255,255,.7)';
+  bgDots.forEach(d => { ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill(); });
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  stars.forEach(s => {
+    const t = s.life / s.maxLife;
+    const scale = t < .15 ? t / .15 : (t > .8 ? (1 - t) / .2 : 1);
+    ctx.globalAlpha = Math.max(scale, 0);
+    ctx.font = (s.r * 2) + 'px ' + EMOJI_FONT;
+    ctx.fillText('⭐', s.x, s.y);
+  });
+  ctx.globalAlpha = 1;
+}
+
+function gameOver(){
+  running = false;
+  if (score > best){ best = score; localStorage.setItem('stars-best', best); }
+  finalScore.textContent = score;
+  bestScore.textContent = best;
+  overlay.classList.add('show');
+}
+
+restartBtn.addEventListener('click', resetGame);
+resetGame();
+</script>
+</body>
+</html>
