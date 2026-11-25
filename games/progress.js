@@ -163,37 +163,5 @@
     el.append(h, ul);
   }
 
-  /* زر «الرئيسية» بأعلى كل لعبة: يسد نافذة اللعبة، أو يرجع للصفحة الرئيسية إذا اللعبة مفتوحة لوحدها */
-  function goHome() {
-    if (window.parent !== window) window.parent.postMessage({ type: 'close-game' }, '*');
-    else location.href = '../index.html';
-  }
-  function mountHomeButton() {
-    const header = document.querySelector('header');
-    if (!header || header.querySelector('.pg-home')) return;
-    injectCSS();
-    const st = document.createElement('style');
-    st.textContent = `
-    header{flex-wrap:nowrap}
-    header h1{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .stats{flex-shrink:0}
-    .pg-home{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:980px;
-      border:none;background:var(--text);color:var(--white);font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;
-      transition:opacity .2s ease,transform .15s ease}
-    .pg-home:hover{opacity:.85}
-    .pg-home:active{transform:scale(.95)}
-    .pg-home:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
-    @media (prefers-reduced-motion: reduce){.pg-home{transition:none}}`;
-    document.head.appendChild(st);
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'pg-home';
-    b.innerHTML = '<span aria-hidden="true">🏠</span>الرئيسية';
-    b.setAttribute('aria-label', 'خروج والرجوع للصفحة الرئيسية');
-    b.addEventListener('click', goHome);
-    header.insertBefore(b, header.firstChild);
-  }
-  mountHomeButton();
-
-  window.Progress = { PLAYERS, GAMES, BADGES, player, setPlayer, stats, record, streakOf, mountPlayerPicker, celebrate, goHome };
+  window.Progress = { PLAYERS, GAMES, BADGES, player, setPlayer, stats, record, streakOf, mountPlayerPicker, celebrate };
 })();
