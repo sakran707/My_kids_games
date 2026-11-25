@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>برمج الروبوت</title>
+<style>
+  :root{
+    --white:#fff; --gray-bg:#f5f5f7; --text:#1d1d1f; --text-2:#6e6e73;
+    --blue:#0071e3; --blue-hover:#0077ed; --line:#d2d2d7;
+    --green:#1f9d55; --green-bg:#e6f6ec; --red:#d93025; --red-bg:#fdeceb;
+    --cell:#eef0f4; --wall:#8e8e93;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Tajawal",Arial,sans-serif;
+    --emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column;background:var(--gray-bg);-webkit-tap-highlight-color:transparent;}
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 18px;background:var(--white);border-bottom:1px solid var(--line);flex:0 0 auto;
+  }
+  header h1{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .stats{display:flex;gap:14px;font-size:14px;color:var(--text-2);font-variant-numeric:tabular-nums;}
+  main{flex:1;overflow:auto;display:grid;place-items:start center;padding:16px;}
+  .screen{width:100%;max-width:460px;text-align:center;display:none;}
+  .screen.show{display:block;animation:pop .3s ease backwards;}
+  @keyframes pop{from{opacity:0;transform:translateY(8px);}}
+  h2{font-size:24px;font-weight:600;margin-bottom:6px;}
+  .muted{color:var(--text-2);font-size:15px;}
+
+  /* اختيار المرحلة */
+  .levels{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px;}
+  .lvl{
+    aspect-ratio:1;border-radius:16px;border:1px solid var(--line);background:var(--white);
+    font-family:var(--font);color:var(--text);cursor:pointer;display:grid;place-items:center;align-content:center;gap:2px;
+    transition:border-color .2s ease,transform .15s ease;
+  }
+  .lvl b{font-size:20px;}
+  .lvl small{font-size:11px;letter-spacing:-1px;min-height:14px;}
+  .lvl:hover{border-color:var(--text-2);}
+  .lvl:active{transform:scale(.94);}
+  .lvl:disabled{cursor:default;opacity:.45;}
+  .lvl:disabled:hover{border-color:var(--line);}
+
+  .btn{
+    border:none;cursor:pointer;background:var(--blue);color:#fff;font-family:var(--font);
+    font-size:17px;min-height:48px;padding:0 26px;border-radius:980px;
+    transition:background .2s ease,transform .15s ease;
+  }
+  .btn:hover{background:var(--blue-hover);}
+  .btn:active{transform:scale(.96);}
+  .btn:disabled{opacity:.4;cursor:default;}
+  .btn.ghost{background:var(--white);color:var(--text);border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:var(--text-2);}
+  button:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+
+  /* اللوحة */
+  .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:14px;color:var(--text-2);}
+  .bar button{background:none;border:none;font-family:var(--font);font-size:14px;color:var(--blue);cursor:pointer;min-height:44px;padding:0 4px;}
+  .goal{font-size:15px;margin-bottom:10px;}
+  .board-wrap{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:10px;margin-bottom:12px;}
+  .board{position:relative;display:grid;gap:4px;direction:ltr;margin:0 auto;}
+  .board.shake{animation:shake .35s ease;}
+  @keyframes shake{25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .cell{aspect-ratio:1;border-radius:8px;background:var(--cell);display:grid;place-items:center;font-family:var(--emoji);font-size:clamp(18px,6vw,28px);}
+  .cell.wall{background:var(--wall);}
+  .cell.got{opacity:.15;}
+  .robot{
+    position:absolute;display:grid;place-items:center;font-family:var(--emoji);font-size:clamp(22px,7.5vw,34px);
+    transition:left .25s ease,top .25s ease;pointer-events:none;
+  }
+
+  /* البرنامج */
+  .prog-label{display:flex;justify-content:space-between;font-size:14px;color:var(--text-2);margin-bottom:6px;}
+  .program{
+    min-height:60px;background:var(--white);border:1px dashed var(--line);border-radius:16px;padding:8px;
+    display:flex;flex-wrap:wrap;gap:6px;direction:ltr;align-content:flex-start;margin-bottom:6px;
+  }
+  .program .empty{color:var(--text-2);font-size:14px;margin:auto;direction:rtl;}
+  .tile{
+    position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--gray-bg);
+    font-family:var(--emoji);font-size:22px;cursor:pointer;transition:transform .15s ease,background .2s ease,border-color .2s ease;
+  }
+  .tile:active{transform:scale(.92);}
+  .tile .rep{position:absolute;bottom:-6px;right:-6px;background:var(--blue);color:#fff;font-family:var(--font);font-size:11px;font-weight:700;border-radius:99px;padding:1px 6px;}
+  .tile.now{background:#fff6d6;border-color:#e0a800;transform:scale(1.08);}
+  .tip{font-size:13px;color:var(--text-2);min-height:18px;margin-bottom:10px;}
+  .palette{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;direction:ltr;margin-bottom:10px;}
+  .cmd{
+    min-height:58px;border-radius:16px;border:1px solid var(--line);background:var(--white);font-family:var(--emoji);font-size:28px;cursor:pointer;
+    transition:border-color .2s ease,transform .15s ease;
+  }
+  .cmd:hover{border-color:var(--text-2);}
+  .cmd:active{transform:scale(.94);}
+  .cmd:disabled{opacity:.4;cursor:default;}
+  .run-row{display:flex;gap:8px;justify-content:center;}
+  .run-row .btn{flex:1;}
+  .run-row .ghost{flex:0 0 auto;padding:0 16px;}
+  .msg{min-height:26px;margin-top:10px;font-size:16px;font-weight:600;}
+  .msg.bad{color:var(--red);}
+  .msg.good{color:var(--green);}
+
+  /* الفوز */
+  .win{
+    position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.35);padding:20px;z-index:5;
+  }
+  .win.show{display:grid;}
+  .win .card{background:var(--white);border-radius:22px;padding:24px 20px;max-width:340px;width:100%;text-align:center;animation:pop .3s ease backwards;}
+  .stars{font-size:42px;letter-spacing:6px;margin:6px 0;}
+  .win p{color:var(--text-2);font-size:15px;}
+  .win .actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+
+  .hint-bar{
+    flex:0 0 auto;text-align:center;font-size:12px;color:var(--text-2);
+    padding:8px;background:var(--white);border-top:1px solid var(--line);
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🤖 برمج الروبوت</h1>
+    <div class="stats"><span id="totalStars">⭐ 0</span></div>
+  </header>
+
+  <main>
+    <!-- اختيار المرحلة -->
+    <section class="screen show" id="startScreen">
+      <h2>برمج الروبوت!</h2>
+      <p class="muted">رتّب الأوامر مثل سكراتش، ثم اضغط «شغّل» حتى يوصل 🤖 إلى 🏁</p>
+      <div id="playerPick"></div>
+      <div class="levels" id="levels"></div>
+    </section>
+
+    <!-- اللعب -->
+    <section class="screen" id="playScreen">
+      <div class="bar">
+        <button type="button" id="backBtn">→ المراحل</button>
+        <span id="lvlTitle">المرحلة 1</span>
+      </div>
+      <p class="goal" id="goal"></p>
+      <div class="board-wrap"><div class="board" id="board"></div></div>
+      <div class="prog-label"><span>برنامجك</span><span id="progCount"></span></div>
+      <div class="program" id="program"></div>
+      <p class="tip" id="tip"></p>
+      <div class="palette" id="palette"></div>
+      <div class="run-row">
+        <button class="btn ghost" type="button" id="undoBtn" aria-label="احذف آخر أمر">⌫</button>
+        <button class="btn ghost" type="button" id="clearBtn" aria-label="امسح البرنامج">🗑️</button>
+        <button class="btn" type="button" id="runBtn">▶️ شغّل</button>
+      </div>
+      <p class="msg" id="msg" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <div class="win" id="win" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="card">
+      <h2 id="winTitle">أحسنت! 🎉</h2>
+      <div class="stars" id="winStars"></div>
+      <p id="winInfo"></p>
+      <div id="newBadges" hidden></div>
+      <div class="actions">
+        <button class="btn" type="button" id="nextBtn">المرحلة التالية</button>
+        <button class="btn ghost" type="button" id="retryBtn">أعد المحاولة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint-bar">⬆️⬇️⬅️➡️ تضيف أوامر · بالمراحل المتقدمة اضغط على أمر حتى تكرره</div>
+
+<script src="progress.js"></script>
+<script>
+/* المراحل: R روبوت · G علم · * نجمة · # جدار · . فارغ
+   loops: يقدر الطفل يكرر الأمر (×2، ×3…) بالضغط عليه */
+const LEVELS = [
+  { loops: false, map: ['.....','.....','R...G','.....','.....'] },
+  { loops: false, map: ['....G','.....','.....','.....','R....'] },
+  { loops: false, map: ['.....','.###.','R.#.G','.....','.....'] },
+  { loops: false, map: ['..*..','.....','R.#.G','..#..','.....'] },
+  { loops: true,  map: ['.......','R.....G','.......'] },
+  { loops: true,  map: ['R.#...','..#.#.','..#.#.','....#G'] },
+  { loops: true,  map: ['*...*','.###.','R...G','.###.','*...*'] },
+  { loops: true,  map: ['R.....','#####.','G...#.','.##.#.','.#..#.','.#....'] },
+  { loops: true,  map: ['..*.G','.#.#.','.*.*.','.#.#.','R....'] },
+  { loops: true,  map: ['G.#....','..#.##.','..#..#.','.....#*','####.#.','R......'] },
+];
+const DIRS = { up: [-1, 0, '⬆️'], down: [1, 0, '⬇️'], left: [0, -1, '⬅️'], right: [0, 1, '➡️'] };
+const MAX_REP = 9, MAX_TILES = 20, STEP_MS = 300;
+
+const $ = (id) => document.getElementById(id);
+const screens = { start: $('startScreen'), play: $('playScreen') };
+const P = () => (window.Progress ? Progress.player() : 'ضيف');
+const store = {
+  get(){ try { return JSON.parse(localStorage.getItem('robot-' + P())) || []; } catch { return []; } },
+  set(v){ try { localStorage.setItem('robot-' + P(), JSON.stringify(v)); } catch {} }
+};
+
+function parse(L){
+  const rows = L.map.length, cols = L.map[0].length;
+  let start, goal; const stars = [];
+  L.map.forEach((row, r) => [...row].forEach((ch, c) => {
+    if (ch === 'R') start = [r, c];
+    if (ch === 'G') goal = [r, c];
+    if (ch === '*') stars.push([r, c]);
+  }));
+  const wall = (r, c) => r < 0 || c < 0 || r >= rows || c >= cols || L.map[r][c] === '#';
+  return { rows, cols, start, goal, stars, wall };
+}
+
+/* أقل عدد أوامر ممكن للمرحلة (للنجمة الثالثة) */
+function solve(L){
+  const S = parse(L), maxRep = L.loops ? MAX_REP : 1, full = (1 << S.stars.length) - 1;
+  const starAt = (r, c) => S.stars.findIndex(s => s[0] === r && s[1] === c);
+  const q = [[S.start[0], S.start[1], 0, 0]], seen = new Set([S.start + ',0']);
+  while (q.length){
+    const [r, c, m, d] = q.shift();
+    if (r === S.goal[0] && c === S.goal[1] && m === full) return d;
+    for (const [dr, dc] of Object.values(DIRS)){
+      let rr = r, cc = c, mm = m;
+      for (let n = 1; n <= maxRep; n++){
+        rr += dr; cc += dc;
+        if (S.wall(rr, cc)) break;
+        const si = starAt(rr, cc); if (si >= 0) mm |= 1 << si;
+        const k = rr + ',' + cc + ',' + mm;
+        if (!seen.has(k)){ seen.add(k); q.push([rr, cc, mm, d + 1]); }
+      }
+    }
+  }
+  return 99;
+}
+
+let li = 0, lv = null, program = [], running = false, robotEl = null, cells = [];
+
+function show(name){
+  Object.values(screens).forEach(s => s.classList.remove('show'));
+  screens[name].classList.add('show');
+}
+
+/* شاشة المراحل */
+function renderLevels(){
+  const done = store.get();
+  const box = $('levels');
+  box.innerHTML = '';
+  LEVELS.forEach((L, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lvl';
+    const unlocked = i === 0 || done[i - 1] > 0;
+    b.disabled = !unlocked;
+    const n = document.createElement('b'); n.textContent = unlocked ? i + 1 : '🔒';
+    const s = document.createElement('small'); s.textContent = done[i] ? '⭐'.repeat(done[i]) : '';
+    b.append(n, s);
+    b.setAttribute('aria-label', 'المرحلة ' + (i + 1) + (unlocked ? '' : ' مقفلة'));
+    b.addEventListener('click', () => openLevel(i));
+    box.appendChild(b);
+  });
+  $('totalStars').textContent = '⭐ ' + done.reduce((a, b) => a + (b || 0), 0);
+}
+
+/* لوحة الأوامر */
+['left', 'up', 'down', 'right'].forEach(d => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'cmd'; b.textContent = DIRS[d][2];
+  b.setAttribute('aria-label', { up: 'فوق', down: 'جوه', left: 'يسار', right: 'يمين' }[d]);
+  b.addEventListener('click', () => addCmd(d));
+  $('palette').appendChild(b);
+});
+
+function openLevel(i){
+  li = i; lv = parse(LEVELS[i]); lv.loops = LEVELS[i].loops; lv.par = solve(LEVELS[i]);
+  program = [];
+  $('lvlTitle').textContent = 'المرحلة ' + (i + 1) + ' من ' + LEVELS.length;
+  $('goal').textContent = 'أوصل 🤖 إلى 🏁' + (lv.stars.length ? ' واجمع كل ⭐ بالطريق' : '');
+  $('tip').textContent = lv.loops ? '💡 اضغط على أمر بالبرنامج حتى تكرره ×2، ×3… أقل أوامر = نجوم أكثر' : '💡 كل سهم يحرّك الروبوت خطوة واحدة · اضغط على أمر حتى تحذفه';
+  $('msg').textContent = ''; $('msg').className = 'msg';
+  drawBoard();
+  renderProgram();
+  show('play');
+}
+
+function drawBoard(){
+  const b = $('board');
+  b.innerHTML = '';
+  b.style.gridTemplateColumns = 'repeat(' + lv.cols + ', 1fr)';
+  b.style.maxWidth = (lv.cols * 58) + 'px';
+  cells = [];
+  LEVELS[li].map.forEach((row, r) => [...row].forEach((ch, c) => {
+    const d = document.createElement('div');
+    d.className = 'cell' + (ch === '#' ? ' wall' : '');
+    d.textContent = ch === 'G' ? '🏁' : ch === '*' ? '⭐' : ch === '#' ? '🧱' : '';
+    b.appendChild(d);
+    cells.push(d);
+  }));
+  robotEl = document.createElement('div');
+  robotEl.className = 'robot';
+  robotEl.textContent = '🤖';
+  robotEl.setAttribute('aria-hidden', 'true');
+  b.appendChild(robotEl);
+  placeRobot(lv.start[0], lv.start[1], true);
+}
+
+function placeRobot(r, c, instant){
+  /* نحسب مكان الخانة الحقيقي حتى يطابق الفراغات بين الخانات */
+  const cell = cells[r * lv.cols + c];
+  if (instant){ robotEl.style.transition = 'none'; }
+  robotEl.style.left = cell.offsetLeft + 'px';
+  robotEl.style.top = cell.offsetTop + 'px';
+  robotEl.style.width = cell.offsetWidth + 'px';
+  robotEl.style.height = cell.offsetHeight + 'px';
+  if (instant){ void robotEl.offsetWidth; robotEl.style.transition = ''; }
+}
+window.addEventListener('resize', () => { if (lv && !running) placeRobot(lv.start[0], lv.start[1], true); });
+
+function addCmd(d){
+  if (running || program.length >= MAX_TILES) return;
+  program.push({ d, n: 1 });
+  renderProgram();
+}
+function renderProgram(activeIdx){
+  const box = $('program');
+  box.innerHTML = '';
+  if (!program.length){
+    const e = document.createElement('span'); e.className = 'empty'; e.textContent = 'اضغط الأسهم تحت حتى تبني البرنامج';
+    box.appendChild(e);
+  }
+  program.forEach((p, i) => {
+    const t = document.createElement('button');
+    t.type = 'button';
+    t.className = 'tile' + (i === activeIdx ? ' now' : '');
+    t.textContent = DIRS[p.d][2];
+    t.setAttribute('aria-label', 'أمر ' + (i + 1) + (p.n > 1 ? ' مكرر ' + p.n : ''));
+    if (p.n > 1){ const r = document.createElement('span'); r.className = 'rep'; r.textContent = '×' + p.n; t.appendChild(r); }
+    t.addEventListener('click', () => {
+      if (running) return;
+      if (lv.loops){ p.n = p.n >= MAX_REP ? 1 : p.n + 1; }
+      else { program.splice(i, 1); }
+      renderProgram();
+    });
+    box.appendChild(t);
+  });
+  $('progCount').textContent = program.length + ' أوامر' + (lv.par < 99 ? ' · الأفضل: ' + lv.par : '');
+  ['runBtn', 'undoBtn', 'clearBtn'].forEach(id => $(id).disabled = running || !program.length);
+  $('palette').querySelectorAll('.cmd').forEach(b => b.disabled = running || program.length >= MAX_TILES);
+}
+
+const wait = (ms) => new Promise(r => setTimeout(r, ms));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+async function run(){
+  if (running || !program.length) return;
+  running = true;
+  $('msg').textContent = ''; $('msg').className = 'msg';
+  cells.forEach(c => c.classList.remove('got'));
+  let [r, c] = lv.start;
+  const got = new Set();
+  placeRobot(r, c, true);
+  renderProgram();
+  let fail = null;
+  outer:
+  for (let i = 0; i < program.length; i++){
+    renderProgram(i);
+    const [dr, dc] = DIRS[program[i].d];
+    for (let k = 0; k < program[i].n; k++){
+      const nr = r + dr, nc = c + dc;
+      if (lv.wall(nr, nc)){ fail = 'wall'; break outer; }
+      r = nr; c = nc;
+      placeRobot(r, c);
+      const si = lv.stars.findIndex(s => s[0] === r && s[1] === c);
+      if (si >= 0 && !got.has(si)){ got.add(si); cells[r * lv.cols + c].classList.add('got'); beep(990, .08); }
+      else beep(520, .04);
+      await wait(reduce ? 120 : STEP_MS);
+      if (r === lv.goal[0] && c === lv.goal[1] && got.size === lv.stars.length) break outer;
+    }
+  }
+  const atGoal = r === lv.goal[0] && c === lv.goal[1];
+  if (!fail && atGoal && got.size === lv.stars.length) return win();
+  if (!fail) fail = atGoal ? 'stars' : 'short';
+  const msg = { wall: 'اصطدم الروبوت بالجدار! 🧱 عدّل البرنامج', short: 'الروبوت ما وصل للعلم 🏁 كمّل البرنامج', stars: 'وصلت! بس باقي ⭐ ما جمعتها' }[fail];
+  $('msg').textContent = msg; $('msg').className = 'msg bad';
+  const b = $('board'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  beep(200, .25);
+  await wait(900);
+  placeRobot(lv.start[0], lv.start[1]);
+  cells.forEach(x => x.classList.remove('got'));
+  running = false;
+  renderProgram();
+}
+
+function win(){
+  const tiles = program.length;
+  const stars = tiles <= lv.par ? 3 : tiles <= lv.par + 2 ? 2 : 1;
+  const done = store.get();
+  done[li] = Math.max(done[li] || 0, stars);
+  store.set(done);
+  $('winStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  $('winInfo').textContent = 'استعملت ' + tiles + ' أوامر' + (stars < 3 ? ' · الأفضل ' + lv.par + '، تقدر تختصر؟' : ' · أفضل حل! 🧠');
+  $('winTitle').textContent = li === LEVELS.length - 1 ? 'خلّصت كل المراحل! 🏆' : 'أحسنت! 🎉';
+  $('nextBtn').hidden = li === LEVELS.length - 1;
+  if (window.Progress) Progress.celebrate($('newBadges'), Progress.record('robot', { stars, correct: 1, level: li }));
+  $('win').classList.add('show');
+  beep(880, .12); setTimeout(() => beep(1175, .18), 140);
+  running = false;
+  renderProgram();
+  ($('nextBtn').hidden ? $('retryBtn') : $('nextBtn')).focus();
+}
+
+let actx = null;
+function beep(freq, dur){
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.setValueAtTime(.12, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + dur);
+    o.connect(g).connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + dur);
+  } catch {}
+}
+
+$('runBtn').addEventListener('click', run);
+$('undoBtn').addEventListener('click', () => { if (!running){ program.pop(); renderProgram(); } });
+$('clearBtn').addEventListener('click', () => { if (!running){ program = []; renderProgram(); } });
+$('backBtn').addEventListener('click', () => { if (!running){ renderLevels(); show('start'); } });
+$('nextBtn').addEventListener('click', () => { $('win').classList.remove('show'); openLevel(li + 1); });
+$('retryBtn').addEventListener('click', () => { $('win').classList.remove('show'); placeRobot(lv.start[0], lv.start[1], true); });
+window.addEventListener('keydown', e => {
+  if (!screens.play.classList.contains('show') || $('win').classList.contains('show')) return;
+  const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+  if (map[e.key]){ e.preventDefault(); addCmd(map[e.key]); }
+  else if (e.key === 'Backspace'){ e.preventDefault(); if (!running){ program.pop(); renderProgram(); } }
+  else if (e.key === 'Enter' && document.activeElement === document.body){ run(); }
+});
+
+if (window.Progress) Progress.mountPlayerPicker($('playerPick'), renderLevels);
+renderLevels();
+</script>
+</body>
+</html>

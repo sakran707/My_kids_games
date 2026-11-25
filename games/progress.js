@@ -12,6 +12,7 @@
     english: { title: 'كلمات إنكليزية', emoji: '🔤' },
     arabic: { title: 'الإملاء العربي', emoji: '✍️' },
     clock: { title: 'قراءة الساعة', emoji: '🕐' },
+    robot: { title: 'برمج الروبوت', emoji: '🤖' },
   };
 
   /* الشارات: id، رمز، اسم، طريقة الحصول، شرط */
@@ -26,6 +27,7 @@
     ['enStar', '🔤', 'English Star', '3 نجوم بالكلمات الإنكليزية', s => (s.games.english || {}).best3],
     ['arKing', '✍️', 'ملك الإملاء', '3 نجوم بالإملاء العربي', s => (s.games.arabic || {}).best3],
     ['timeMaster', '🕐', 'سيد الوقت', '3 نجوم بقراءة الساعة', s => (s.games.clock || {}).best3],
+    ['coder', '🤖', 'مبرمج صغير', 'خلّص كل مراحل الروبوت', s => ((s.games.robot || {}).levels || []).length >= 10],
     ['correct100', '📚', 'المجتهد', '100 جواب صحيح', s => s.correct >= 100],
     ['streak3', '🔥', 'ثلاث أيام', 'العب 3 أيام متتالية', s => s.bestStreak >= 3],
     ['streak7', '🏆', 'أسبوع كامل', 'العب 7 أيام متتالية', s => s.bestStreak >= 7],
@@ -78,6 +80,7 @@
     g.rounds++;
     g.stars += r.stars || 0;
     if (r.stars >= 3) g.best3 = true;
+    if (r.level != null) g.levels = [...new Set((g.levels || []).concat(r.level))];
     s.games[game] = g;
     if (!s.days.includes(today())) s.days = s.days.concat(today()).slice(-60);
     s.bestStreak = Math.max(s.bestStreak, streakOf(s.days));
