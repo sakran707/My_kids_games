@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>بطل جدول الضرب</title>
+<style>
+  :root{
+    --white:#fff; --gray-bg:#f5f5f7; --text:#1d1d1f; --text-2:#6e6e73;
+    --blue:#0071e3; --blue-hover:#0077ed; --line:#d2d2d7;
+    --green:#1f9d55; --green-bg:#e6f6ec; --red:#d93025; --red-bg:#fdeceb;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Tajawal",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column;background:var(--gray-bg);-webkit-tap-highlight-color:transparent;}
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 18px;background:var(--white);border-bottom:1px solid var(--line);flex:0 0 auto;
+  }
+  header h1{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .stats{display:flex;gap:14px;font-size:14px;color:var(--text-2);font-variant-numeric:tabular-nums;}
+  main{flex:1;overflow:auto;display:grid;place-items:center;padding:20px 16px;}
+  .screen{width:100%;max-width:440px;text-align:center;display:none;}
+  .screen.show{display:block;animation:pop .3s ease backwards;}
+  @keyframes pop{from{opacity:0;transform:translateY(8px);}}
+
+  h2{font-size:24px;font-weight:600;margin-bottom:6px;}
+  .muted{color:var(--text-2);font-size:15px;}
+
+  /* اختيار الجدول */
+  .tables{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 14px;}
+  .pick{
+    min-height:56px;border-radius:16px;border:1px solid var(--line);background:var(--white);
+    font-family:var(--font);font-size:20px;font-weight:600;color:var(--text);cursor:pointer;
+    transition:border-color .2s ease,background .2s ease,color .2s ease,transform .15s ease;
+  }
+  .pick:hover{border-color:var(--text-2);}
+  .pick:active{transform:scale(.95);}
+  .pick[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:var(--white);}
+  .pick.all{grid-column:1 / -1;font-size:17px;}
+  .best-line{font-size:13px;color:var(--text-2);min-height:20px;}
+
+  .btn{
+    border:none;cursor:pointer;background:var(--blue);color:#fff;font-family:var(--font);
+    font-size:17px;min-height:48px;padding:0 30px;border-radius:980px;margin-top:16px;
+    transition:background .2s ease,transform .15s ease;
+  }
+  .btn:hover{background:var(--blue-hover);}
+  .btn:active{transform:scale(.96);}
+  .btn.ghost{background:var(--white);color:var(--text);border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:var(--text-2);}
+  .btn:disabled{opacity:.4;cursor:default;}
+  button:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+
+  /* اللعب */
+  .progress{display:flex;justify-content:space-between;font-size:14px;color:var(--text-2);margin-bottom:10px;font-variant-numeric:tabular-nums;}
+  .timer{height:6px;border-radius:99px;background:#e3e3e8;overflow:hidden;margin-bottom:22px;}
+  .timer i{display:block;height:100%;width:100%;background:var(--blue);border-radius:99px;transform-origin:right;}
+  .question{
+    background:var(--white);border:1px solid var(--line);border-radius:22px;
+    padding:30px 10px;margin-bottom:18px;direction:ltr;
+    font-size:clamp(46px,14vw,64px);font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums;
+  }
+  .question.shake{animation:shake .35s ease;}
+  @keyframes shake{25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .ans{
+    min-height:76px;border-radius:18px;border:1px solid var(--line);background:var(--white);
+    font-family:var(--font);font-size:30px;font-weight:600;color:var(--text);cursor:pointer;
+    font-variant-numeric:tabular-nums;
+    transition:background .2s ease,border-color .2s ease,transform .15s ease;
+  }
+  .ans:hover{border-color:var(--text-2);}
+  .ans:active{transform:scale(.96);}
+  .ans.right{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+  .ans.wrong{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+  .ans:disabled{cursor:default;}
+  .feedback{min-height:26px;margin-top:14px;font-size:16px;font-weight:500;}
+  .feedback.good{color:var(--green);}
+  .feedback.bad{color:var(--red);}
+
+  /* النتيجة */
+  .stars{font-size:44px;letter-spacing:6px;margin:8px 0 4px;}
+  .big{font-size:44px;font-weight:700;margin:4px 0;font-variant-numeric:tabular-nums;}
+  .review{
+    margin-top:18px;background:var(--white);border:1px solid var(--line);border-radius:16px;
+    padding:14px 16px;text-align:right;
+  }
+  .review h3{font-size:15px;font-weight:600;margin-bottom:8px;}
+  .review ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px;}
+  .review li{background:var(--gray-bg);border-radius:10px;padding:6px 12px;font-size:17px;direction:ltr;font-variant-numeric:tabular-nums;}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+  .hint-bar{
+    flex:0 0 auto;text-align:center;font-size:12px;color:var(--text-2);
+    padding:8px;background:var(--white);border-top:1px solid var(--line);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🔢 بطل جدول الضرب</h1>
+    <div class="stats">
+      <span id="scoreEl">النقاط: 0</span>
+      <span id="livesEl">❤️❤️❤️</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- شاشة البداية -->
+    <section class="screen show" id="startScreen">
+      <h2>اختر الجدول</h2>
+      <p class="muted">10 أسئلة · أجب بسرعة لتجمع نقاطاً أكثر</p>
+      <div class="tables" id="tables"></div>
+      <p class="best-line" id="bestLine"></p>
+      <button class="btn" id="startBtn" type="button">ابدأ</button>
+    </section>
+
+    <!-- شاشة اللعب -->
+    <section class="screen" id="playScreen">
+      <div class="progress"><span id="qNum">السؤال 1 من 10</span><span id="streakEl"></span></div>
+      <div class="timer"><i id="timerBar"></i></div>
+      <div class="question" id="question">7 × 8</div>
+      <div class="answers" id="answers"></div>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+    </section>
+
+    <!-- شاشة النتيجة -->
+    <section class="screen" id="endScreen">
+      <h2 id="endTitle">أحسنت!</h2>
+      <div class="stars" id="starsEl"></div>
+      <div class="big" id="finalScore">0</div>
+      <p class="muted" id="endInfo"></p>
+      <div class="review" id="review" hidden>
+        <h3>راجع هذه:</h3>
+        <ul id="reviewList"></ul>
+      </div>
+      <div class="actions">
+        <button class="btn" id="againBtn" type="button">العب مرة أخرى</button>
+        <button class="btn ghost" id="changeBtn" type="button">غيّر الجدول</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="hint-bar">اختر الجواب الصحيح · يمكنك استخدام الأرقام 1 إلى 4 من لوحة المفاتيح</div>
+
+<script>
+const ROUND = 10, TIME = 10, LIVES = 3;
+const $ = (id) => document.getElementById(id);
+const screens = { start: $('startScreen'), play: $('playScreen'), end: $('endScreen') };
+const store = {
+  get(k){ try { return +localStorage.getItem(k) || 0; } catch { return 0; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch {} }
+};
+
+let chosen = 'all';
+let questions = [], qi = 0, score = 0, lives = LIVES, streak = 0, correct = 0, mistakes = [];
+let timerStart = 0, timerRAF = 0, locked = false;
+
+/* أزرار اختيار الجدول */
+const tablesEl = $('tables');
+[2,3,4,5,6,7,8,9,10, 'all'].forEach(t => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pick' + (t === 'all' ? ' all' : '');
+  b.textContent = t === 'all' ? 'كل الجداول (مختلط)' : 'جدول ' + t;
+  b.dataset.t = t;
+  b.setAttribute('aria-pressed', t === chosen ? 'true' : 'false');
+  b.addEventListener('click', () => { chosen = String(t); refreshPicks(); });
+  tablesEl.appendChild(b);
+});
+function refreshPicks(){
+  tablesEl.querySelectorAll('.pick').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === chosen ? 'true' : 'false'));
+  const best = store.get('mul-best-' + chosen);
+  $('bestLine').textContent = best ? 'أفضل نتيجة لهذا الاختيار: ' + best : '';
+}
+refreshPicks();
+
+function show(name){
+  Object.values(screens).forEach(s => s.classList.remove('show'));
+  screens[name].classList.add('show');
+}
+
+/* صوت بسيط بدون ملفات */
+let actx = null;
+function beep(freq, dur){
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.setValueAtTime(.15, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + dur);
+    o.connect(g).connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + dur);
+  } catch {}
+}
+
+function rand(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+function shuffle(arr){ for (let i = arr.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+function makeQuestions(){
+  const list = [], seen = new Set();
+  while (list.length < ROUND){
+    const a = chosen === 'all' ? rand(2, 10) : +chosen;
+    const b = rand(1, 10);
+    const key = a + 'x' + b;
+    if (seen.has(key) && seen.size < 10) continue;
+    seen.add(key);
+    list.push(Math.random() < .5 ? [a, b] : [b, a]);
+  }
+  return list;
+}
+
+function options(a, b){
+  const ans = a * b, set = new Set([ans]);
+  const near = [a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b, ans + 1, ans - 1, ans + 2, ans + 10, ans - 10];
+  shuffle(near);
+  for (const n of near){ if (set.size >= 4) break; if (n > 0) set.add(n); }
+  while (set.size < 4) set.add(ans + rand(3, 12));
+  return shuffle([...set]);
+}
+
+function startGame(){
+  questions = makeQuestions();
+  qi = 0; score = 0; lives = LIVES; streak = 0; correct = 0; mistakes = [];
+  updateStats();
+  show('play');
+  nextQuestion();
+}
+
+function updateStats(){
+  $('scoreEl').textContent = 'النقاط: ' + score;
+  $('livesEl').textContent = '❤️'.repeat(lives) + '🤍'.repeat(LIVES - lives);
+  $('streakEl').textContent = streak >= 2 ? '🔥 ' + streak + ' متتالية' : '';
+}
+
+function nextQuestion(){
+  if (qi >= ROUND || lives <= 0) return endGame();
+  locked = false;
+  const [a, b] = questions[qi];
+  $('qNum').textContent = 'السؤال ' + (qi + 1) + ' من ' + ROUND;
+  const q = $('question');
+  q.textContent = a + ' × ' + b;
+  q.classList.remove('shake');
+  $('feedback').textContent = '';
+  $('feedback').className = 'feedback';
+  const box = $('answers');
+  box.innerHTML = '';
+  options(a, b).forEach((n, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ans';
+    btn.textContent = n;
+    btn.dataset.key = i + 1;
+    btn.addEventListener('click', () => answer(n, btn));
+    box.appendChild(btn);
+  });
+  timerStart = performance.now();
+  cancelAnimationFrame(timerRAF);
+  tick();
+}
+
+function tick(){
+  const left = 1 - (performance.now() - timerStart) / (TIME * 1000);
+  $('timerBar').style.transform = 'scaleX(' + Math.max(left, 0) + ')';
+  if (left <= 0) return answer(null, null);
+  timerRAF = requestAnimationFrame(tick);
+}
+
+function answer(n, btn){
+  if (locked) return;
+  locked = true;
+  cancelAnimationFrame(timerRAF);
+  const [a, b] = questions[qi];
+  const ans = a * b;
+  const fb = $('feedback');
+  const buttons = [...$('answers').children];
+  buttons.forEach(x => { x.disabled = true; if (+x.textContent === ans) x.classList.add('right'); });
+
+  if (n === ans){
+    const elapsed = (performance.now() - timerStart) / 1000;
+    const bonus = Math.max(0, Math.round((TIME - elapsed) / 2));
+    streak++; correct++;
+    score += 10 + bonus + (streak >= 3 ? 5 : 0);
+    fb.textContent = ['ممتاز! 👏', 'أحسنت! ⭐', 'رائع! 🎉', 'صحيح! ✅'][rand(0, 3)];
+    fb.className = 'feedback good';
+    beep(880, .15);
+  } else {
+    if (btn) btn.classList.add('wrong');
+    streak = 0; lives--;
+    mistakes.push(a + ' × ' + b + ' = ' + ans);
+    fb.textContent = (n === null ? 'انتهى الوقت! ' : '') + 'الجواب: ⁦' + a + ' × ' + b + ' = ' + ans + '⁩';
+    fb.className = 'feedback bad';
+    const q = $('question'); void q.offsetWidth; q.classList.add('shake');
+    beep(220, .25);
+  }
+  updateStats();
+  qi++;
+  setTimeout(nextQuestion, n === ans ? 800 : 1800);
+}
+
+function endGame(){
+  cancelAnimationFrame(timerRAF);
+  const key = 'mul-best-' + chosen;
+  const best = Math.max(store.get(key), score);
+  store.set(key, best);
+  const ratio = correct / ROUND;
+  const stars = ratio >= .9 ? 3 : ratio >= .6 ? 2 : ratio > 0 ? 1 : 0;
+  $('starsEl').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  $('endTitle').textContent = lives <= 0 ? 'انتهت المحاولات!' : stars === 3 ? 'بطل جدول الضرب! 🏆' : stars === 2 ? 'أحسنت!' : 'حاول مرة أخرى 💪';
+  $('finalScore').textContent = score;
+  $('endInfo').textContent = 'أجبت ' + correct + ' من ' + ROUND + ' صحيحة · أفضل نتيجة: ' + best;
+  $('reviewList').innerHTML = '';
+  mistakes.forEach(m => { const li = document.createElement('li'); li.textContent = m; $('reviewList').appendChild(li); });
+  $('review').hidden = mistakes.length === 0;
+  show('end');
+  $('againBtn').focus();
+}
+
+$('startBtn').addEventListener('click', startGame);
+$('againBtn').addEventListener('click', startGame);
+$('changeBtn').addEventListener('click', () => { refreshPicks(); show('start'); });
+window.addEventListener('keydown', e => {
+  if (!screens.play.classList.contains('show') || locked) return;
+  const btn = $('answers').querySelector('[data-key="' + e.key + '"]');
+  if (btn) btn.click();
+});
+</script>
+</body>
+</html>

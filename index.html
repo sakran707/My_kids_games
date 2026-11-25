@@ -626,6 +626,13 @@
           file: "balloon.html",
           emoji: "🎈",
         },
+        {
+          title: "بطل جدول الضرب",
+          kid: "مريم واحمد",
+          file: "multiply.html",
+          emoji: "🔢",
+          edu: true, // لعبة تعليمية (مو من إبداع الأطفال)
+        },
       ];
 
       /* بطاقات الأطفال: الصورة داخل مجلد images/ */
@@ -648,7 +655,7 @@
       const norm = (s) => s.trim().replace(/[أإآ]/g, "ا");
       const kidsGrid = document.getElementById("kidsGrid");
       KIDS.forEach((k) => {
-        const count = GAMES.filter((g) => norm(g.kid) === norm(k.name)).length;
+        const count = GAMES.filter((g) => !g.edu && norm(g.kid) === norm(k.name)).length;
         const card = document.createElement("article");
         card.className = "kid-card";
 
@@ -717,7 +724,7 @@
           c.classList.toggle("active", c.dataset.kid === id),
         );
         document.querySelectorAll("#grid .card").forEach((c) => {
-          c.hidden = id !== "all" && c.dataset.kid !== id;
+          c.hidden = id !== "all" && !c.dataset.kid.split(" و").includes(id);
           if (!c.hidden) {
             c.style.animation = "none";
             void c.offsetWidth;
@@ -742,7 +749,7 @@
 
         const kid = document.createElement("p");
         kid.className = "kid";
-        kid.textContent = `من إبداع ${g.kid}`;
+        kid.textContent = g.edu ? `لعبة تعليمية لـ${g.kid}` : `من إبداع ${g.kid}`;
 
         const btn = document.createElement("button");
         btn.className = "btn";
