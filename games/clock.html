@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>قراءة الساعة</title>
+<style>
+  :root{
+    --white:#fff; --gray-bg:#f5f5f7; --text:#1d1d1f; --text-2:#6e6e73;
+    --blue:#0071e3; --blue-hover:#0077ed; --line:#d2d2d7;
+    --green:#1f9d55; --green-bg:#e6f6ec; --red:#d93025; --red-bg:#fdeceb;
+    --hand-h:#1d1d1f; --hand-m:#0071e3;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Tajawal",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column;background:var(--gray-bg);-webkit-tap-highlight-color:transparent;}
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 18px;background:var(--white);border-bottom:1px solid var(--line);flex:0 0 auto;
+  }
+  header h1{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .stats{display:flex;gap:14px;font-size:14px;color:var(--text-2);font-variant-numeric:tabular-nums;}
+  main{flex:1;overflow:auto;display:grid;place-items:center;padding:20px 16px;}
+  .screen{width:100%;max-width:440px;text-align:center;display:none;}
+  .screen.show{display:block;animation:pop .3s ease backwards;}
+  @keyframes pop{from{opacity:0;transform:translateY(8px);}}
+
+  h2{font-size:24px;font-weight:600;margin-bottom:6px;}
+  .muted{color:var(--text-2);font-size:15px;}
+  .label{font-size:14px;color:var(--text-2);margin:20px 0 8px;text-align:right;}
+
+  .picks{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .pick{
+    min-height:56px;border-radius:16px;border:1px solid var(--line);background:var(--white);
+    font-family:var(--font);font-size:16px;font-weight:600;color:var(--text);cursor:pointer;padding:6px 10px;
+    transition:border-color .2s ease,background .2s ease,color .2s ease,transform .15s ease;
+  }
+  .pick:hover{border-color:var(--text-2);}
+  .pick:active{transform:scale(.95);}
+  .pick[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:var(--white);}
+  .pick small{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px;}
+  .best-line{font-size:13px;color:var(--text-2);min-height:20px;margin-top:12px;}
+
+  .btn{
+    border:none;cursor:pointer;background:var(--blue);color:#fff;font-family:var(--font);
+    font-size:17px;min-height:48px;padding:0 30px;border-radius:980px;margin-top:12px;
+    transition:background .2s ease,transform .15s ease;
+  }
+  .btn:hover{background:var(--blue-hover);}
+  .btn:active{transform:scale(.96);}
+  .btn.ghost{background:var(--white);color:var(--text);border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:var(--text-2);}
+  button:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+
+  .progress{display:flex;justify-content:space-between;font-size:14px;color:var(--text-2);margin-bottom:12px;font-variant-numeric:tabular-nums;}
+  .question{
+    background:var(--white);border:1px solid var(--line);border-radius:22px;
+    padding:18px 10px 14px;margin-bottom:16px;
+  }
+  .question.shake{animation:shake .35s ease;}
+  @keyframes shake{25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+  .big-clock{width:min(220px,58vw);height:auto;display:block;margin:0 auto;}
+  .digital{direction:ltr;font-size:clamp(44px,13vw,60px);font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
+  .say{font-size:18px;font-weight:600;margin-top:4px;min-height:24px;}
+  .ask{font-size:15px;color:var(--text-2);margin-top:6px;}
+
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .ans{
+    min-height:72px;border-radius:18px;border:1px solid var(--line);background:var(--white);
+    font-family:var(--font);color:var(--text);cursor:pointer;padding:8px 6px;
+    transition:background .2s ease,border-color .2s ease,transform .15s ease;
+  }
+  .ans .t{display:block;direction:ltr;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .ans .s{display:block;font-size:13px;color:var(--text-2);margin-top:2px;min-height:16px;}
+  .ans svg{width:100%;max-width:130px;height:auto;display:block;margin:0 auto;}
+  .ans:hover{border-color:var(--text-2);}
+  .ans:active{transform:scale(.96);}
+  .ans.right{background:var(--green-bg);border-color:var(--green);}
+  .ans.wrong{background:var(--red-bg);border-color:var(--red);}
+  .ans:disabled{cursor:default;}
+  .feedback{min-height:28px;margin-top:14px;font-size:17px;font-weight:600;}
+  .feedback.good{color:var(--green);}
+  .feedback.bad{color:var(--red);}
+  .rule{
+    display:none;margin-top:10px;background:var(--white);border:1px solid var(--line);border-radius:14px;
+    padding:10px 14px;font-size:15px;color:var(--text-2);text-align:right;line-height:1.6;
+  }
+  .rule.show{display:block;}
+  .rule b{color:var(--text);}
+  .next{display:none;}
+  .next.show{display:inline-block;}
+
+  /* الساعة */
+  .face{fill:var(--white);stroke:var(--text);stroke-width:4;}
+  .tick{stroke:var(--text-2);stroke-width:1.5;}
+  .tick.h{stroke:var(--text);stroke-width:3;}
+  .num{font-family:var(--font);font-size:15px;font-weight:700;fill:var(--text);text-anchor:middle;dominant-baseline:central;}
+  .hand-h{stroke:var(--hand-h);stroke-width:7;stroke-linecap:round;}
+  .hand-m{stroke:var(--hand-m);stroke-width:4.5;stroke-linecap:round;}
+  .pin{fill:var(--text);}
+
+  .legend{display:flex;justify-content:center;gap:16px;font-size:13px;color:var(--text-2);margin-top:6px;}
+  .legend i{display:inline-block;width:18px;height:5px;border-radius:3px;vertical-align:middle;margin-inline-end:6px;}
+
+  .stars{font-size:44px;letter-spacing:6px;margin:8px 0 4px;}
+  .big{font-size:44px;font-weight:700;margin:4px 0;font-variant-numeric:tabular-nums;}
+  .review{
+    margin-top:18px;background:var(--white);border:1px solid var(--line);border-radius:16px;
+    padding:14px 16px;text-align:right;
+  }
+  .review h3{font-size:15px;font-weight:600;margin-bottom:8px;}
+  .review ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+  .review li{background:var(--gray-bg);border-radius:12px;padding:8px;text-align:center;}
+  .review li svg{width:70px;height:auto;}
+  .review li span{display:block;direction:ltr;font-weight:700;font-size:17px;}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+  .hint-bar{
+    flex:0 0 auto;text-align:center;font-size:12px;color:var(--text-2);
+    padding:8px;background:var(--white);border-top:1px solid var(--line);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🕐 قراءة الساعة</h1>
+    <div class="stats">
+      <span id="scoreEl">النقاط: 0</span>
+      <span id="livesEl">❤️❤️❤️</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="screen show" id="startScreen">
+      <h2>كم الساعة؟</h2>
+      <p class="muted">10 أسئلة · العقرب القصير للساعات والطويل للدقائق</p>
+      <p class="label">المستوى</p>
+      <div class="picks" id="levels"></div>
+      <p class="label">طريقة اللعب</p>
+      <div class="picks" id="modes"></div>
+      <p class="best-line" id="bestLine"></p>
+      <button class="btn" id="startBtn" type="button">ابدأ</button>
+    </section>
+
+    <section class="screen" id="playScreen">
+      <div class="progress"><span id="qNum">السؤال 1 من 10</span><span id="streakEl"></span></div>
+      <div class="question" id="question">
+        <div id="prompt"></div>
+        <p class="ask" id="ask"></p>
+      </div>
+      <div class="answers" id="answers"></div>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+      <div class="rule" id="rule"></div>
+      <button class="btn next" id="nextBtn" type="button">التالي</button>
+    </section>
+
+    <section class="screen" id="endScreen">
+      <h2 id="endTitle">أحسنت!</h2>
+      <div class="stars" id="starsEl"></div>
+      <div class="big" id="finalScore">0</div>
+      <p class="muted" id="endInfo"></p>
+      <div class="review" id="review" hidden>
+        <h3>راجع هذه الأوقات:</h3>
+        <ul id="reviewList"></ul>
+      </div>
+      <div class="actions">
+        <button class="btn" id="againBtn" type="button">العب مرة أخرى</button>
+        <button class="btn ghost" id="changeBtn" type="button">غيّر المستوى</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="hint-bar">اختر الجواب الصحيح · يمكنك استخدام الأرقام 1 إلى 4 من لوحة المفاتيح</div>
+
+<script>
+const LEVELS = {
+  hour:    { label: 'الساعة تماماً', sub: '3:00 · 7:00', mins: [0] },
+  half:    { label: 'والنصف', sub: '3:00 · 3:30', mins: [0, 30] },
+  quarter: { label: 'والربع وإلا ربعاً', sub: '3:15 · 3:45', mins: [0, 15, 30, 45] },
+  five:    { label: 'كل 5 دقائق', sub: '3:05 · 3:50', mins: [0,5,10,15,20,25,30,35,40,45,50,55] },
+};
+const MODES = {
+  read: ['اقرأ الساعة', 'ساعة ← وقت'],
+  find: ['اختر الساعة', 'وقت ← ساعة'],
+};
+const HOURS = ['الثانية عشرة','الواحدة','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة','الحادية عشرة','الثانية عشرة'];
+
+const ROUND = 10, LIVES = 3;
+const $ = (id) => document.getElementById(id);
+const screens = { start: $('startScreen'), play: $('playScreen'), end: $('endScreen') };
+const store = {
+  get(k){ try { return +localStorage.getItem(k) || 0; } catch { return 0; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch {} }
+};
+
+let level = 'half', mode = 'read';
+let questions = [], qi = 0, score = 0, lives = LIVES, streak = 0, correct = 0, mistakes = [], locked = false;
+
+function makePicks(el, items, setCur){
+  items.forEach(([id, label, sub]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pick';
+    b.dataset.id = id;
+    b.textContent = label;
+    if (sub){ const s = document.createElement('small'); s.textContent = sub; s.dir = 'ltr'; b.appendChild(s); }
+    b.addEventListener('click', () => { setCur(id); refresh(); });
+    el.appendChild(b);
+  });
+}
+makePicks($('levels'), Object.entries(LEVELS).map(([id, l]) => [id, l.label, l.sub]), v => level = v);
+makePicks($('modes'), Object.entries(MODES).map(([id, m]) => [id, m[0], m[1]]), v => mode = v);
+$('modes').querySelectorAll('small').forEach(s => s.dir = 'rtl');
+function refresh(){
+  $('levels').querySelectorAll('.pick').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === level ? 'true' : 'false'));
+  $('modes').querySelectorAll('.pick').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === mode ? 'true' : 'false'));
+  const best = store.get('clock-best-' + level + '-' + mode);
+  $('bestLine').textContent = best ? 'أفضل نتيجة لهذا الاختيار: ' + best : '';
+}
+refresh();
+
+function show(name){
+  Object.values(screens).forEach(s => s.classList.remove('show'));
+  screens[name].classList.add('show');
+}
+
+let actx = null;
+function beep(freq, dur){
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.setValueAtTime(.15, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + dur);
+    o.connect(g).connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + dur);
+  } catch {}
+}
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function shuffle(arr){ for (let i = arr.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+/* الوقت: h من 1 إلى 12، m دقائق */
+const key = (t) => t.h + ':' + t.m;
+const digital = (t) => t.h + ':' + String(t.m).padStart(2, '0');
+function sayTime(t){
+  const next = t.h % 12 + 1;
+  if (t.m === 0) return 'الساعة ' + HOURS[t.h];
+  if (t.m === 15) return HOURS[t.h] + ' والربع';
+  if (t.m === 30) return HOURS[t.h] + ' والنصف';
+  if (t.m === 45) return HOURS[next] + ' إلا ربعاً';
+  return '';
+}
+function norm(h, m){
+  m = ((m % 60) + 60) % 60;
+  h = ((h - 1) % 12 + 12) % 12 + 1;
+  return { h, m };
+}
+
+/* رسم الساعة SVG */
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+function clockSVG(t, label){
+  const s = el('svg', { viewBox: '0 0 200 200', role: 'img', 'aria-label': label || 'ساعة' });
+  s.appendChild(el('circle', { cx: 100, cy: 100, r: 94, class: 'face' }));
+  for (let i = 0; i < 60; i++){
+    const a = i * 6 * Math.PI / 180, big = i % 5 === 0;
+    const r1 = big ? 80 : 85, r2 = 89;
+    s.appendChild(el('line', { x1: 100 + r1 * Math.sin(a), y1: 100 - r1 * Math.cos(a), x2: 100 + r2 * Math.sin(a), y2: 100 - r2 * Math.cos(a), class: 'tick' + (big ? ' h' : '') }));
+  }
+  for (let n = 1; n <= 12; n++){
+    const a = n * 30 * Math.PI / 180;
+    const tx = el('text', { x: 100 + 66 * Math.sin(a), y: 100 - 66 * Math.cos(a), class: 'num' });
+    tx.textContent = n;
+    s.appendChild(tx);
+  }
+  const ha = ((t.h % 12) + t.m / 60) * 30 * Math.PI / 180;
+  const ma = t.m * 6 * Math.PI / 180;
+  s.appendChild(el('line', { x1: 100, y1: 100, x2: 100 + 44 * Math.sin(ha), y2: 100 - 44 * Math.cos(ha), class: 'hand-h' }));
+  s.appendChild(el('line', { x1: 100, y1: 100, x2: 100 + 72 * Math.sin(ma), y2: 100 - 72 * Math.cos(ma), class: 'hand-m' }));
+  s.appendChild(el('circle', { cx: 100, cy: 100, r: 5, class: 'pin' }));
+  return s;
+}
+
+function buildQuestions(){
+  const mins = LEVELS[level].mins, list = [], seen = new Set();
+  while (list.length < ROUND){
+    const t = { h: rand(1, 12), m: mins[rand(0, mins.length - 1)] };
+    if (seen.has(key(t))) continue;
+    seen.add(key(t)); list.push(t);
+  }
+  return list;
+}
+
+/* أخطاء شائعة: تبديل العقربين، الساعة اللي بعدها، دقائق قريبة */
+function distractors(t){
+  const mins = LEVELS[level].mins;
+  const cands = [];
+  const swapH = Math.round(t.m / 5) || 12, swapM = (t.h % 12) * 5;
+  if (mins.includes(swapM)) cands.push(norm(swapH, swapM));
+  cands.push(norm(t.h + 1, t.m), norm(t.h - 1, t.m));
+  if (mins.length > 1){
+    mins.filter(m => m !== t.m).forEach(m => cands.push(norm(t.h, m)));
+    cands.push(norm(t.h + 1, mins[rand(0, mins.length - 1)]));
+  }
+  cands.push(norm(t.h + 6, t.m), norm(t.h + rand(2, 5), t.m));
+  const out = [], seen = new Set([key(t)]);
+  for (const c of shuffle(cands.slice(0, 3)).concat(shuffle(cands.slice(3)))){
+    if (out.length >= 3) break;
+    if (seen.has(key(c))) continue;
+    seen.add(key(c)); out.push(c);
+  }
+  while (out.length < 3){ const c = norm(rand(1, 12), mins[rand(0, mins.length - 1)]); if (!seen.has(key(c))){ seen.add(key(c)); out.push(c); } }
+  return out;
+}
+
+function startGame(){
+  questions = buildQuestions();
+  qi = 0; score = 0; lives = LIVES; streak = 0; correct = 0; mistakes = [];
+  updateStats();
+  show('play');
+  nextQuestion();
+}
+function updateStats(){
+  $('scoreEl').textContent = 'النقاط: ' + score;
+  $('livesEl').textContent = '❤️'.repeat(lives) + '🤍'.repeat(LIVES - lives);
+  $('streakEl').textContent = streak >= 2 ? '🔥 ' + streak + ' متتالية' : '';
+}
+
+function nextQuestion(){
+  if (qi >= ROUND || lives <= 0) return endGame();
+  locked = false;
+  const t = questions[qi];
+  $('qNum').textContent = 'السؤال ' + (qi + 1) + ' من ' + ROUND;
+  $('question').classList.remove('shake');
+  $('feedback').textContent = ''; $('feedback').className = 'feedback';
+  $('rule').className = 'rule';
+  $('nextBtn').classList.remove('show');
+  const prompt = $('prompt');
+  prompt.innerHTML = '';
+  const box = $('answers');
+  box.innerHTML = '';
+  const opts = shuffle([t, ...distractors(t)]);
+
+  if (mode === 'read'){
+    const c = clockSVG(t, 'الساعة في السؤال'); c.classList.add('big-clock');
+    prompt.appendChild(c);
+    const lg = document.createElement('div'); lg.className = 'legend';
+    lg.innerHTML = '<span><i style="background:var(--hand-h)"></i>قصير: الساعات</span><span><i style="background:var(--hand-m)"></i>طويل: الدقائق</span>';
+    prompt.appendChild(lg);
+    $('ask').textContent = 'كم الساعة؟';
+  } else {
+    const d = document.createElement('div'); d.className = 'digital'; d.textContent = digital(t);
+    const s = document.createElement('div'); s.className = 'say'; s.textContent = sayTime(t);
+    prompt.append(d, s);
+    $('ask').textContent = 'أي ساعة تُظهر هذا الوقت؟';
+  }
+
+  opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ans';
+    btn.dataset.val = key(o);
+    btn.dataset.key = i + 1;
+    if (mode === 'read'){
+      const tt = document.createElement('span'); tt.className = 't'; tt.textContent = digital(o);
+      const ss = document.createElement('span'); ss.className = 's'; ss.textContent = sayTime(o);
+      btn.append(tt, ss);
+      btn.setAttribute('aria-label', digital(o));
+    } else {
+      btn.appendChild(clockSVG(o, 'خيار ' + (i + 1)));
+    }
+    btn.addEventListener('click', () => answer(o, btn));
+    box.appendChild(btn);
+  });
+}
+
+function answer(o, btn){
+  if (locked) return;
+  locked = true;
+  const t = questions[qi];
+  const fb = $('feedback');
+  [...$('answers').children].forEach(x => { x.disabled = true; if (x.dataset.val === key(t)) x.classList.add('right'); });
+  const text = '⁦' + digital(t) + '⁩' + (sayTime(t) ? ' · ' + sayTime(t) : '');
+
+  if (key(o) === key(t)){
+    streak++; correct++;
+    score += 10 + (streak >= 3 ? 5 : 0);
+    fb.textContent = ['ممتاز! 👏', 'أحسنت! ⭐', 'رائع! 🎉', 'صحيح! ✅'][rand(0, 3)] + ' ' + text;
+    fb.className = 'feedback good';
+    beep(880, .15);
+  } else {
+    btn.classList.add('wrong');
+    streak = 0; lives--;
+    mistakes.push(t);
+    fb.textContent = 'الجواب: ' + text;
+    fb.className = 'feedback bad';
+    const q = $('question'); void q.offsetWidth; q.classList.add('shake');
+    beep(220, .25);
+    $('rule').innerHTML = '💡 ' + hint(t, o);
+    $('rule').className = 'rule show';
+  }
+  updateStats();
+  qi++;
+  $('nextBtn').classList.add('show');
+  $('nextBtn').focus();
+}
+
+function hint(t, o){
+  if (o.h === (Math.round(t.m / 5) || 12) && o.m === (t.h % 12) * 5)
+    return 'لا تخلط بين العقربين: <b>القصير</b> يشير إلى الساعة، و<b>الطويل</b> يشير إلى الدقائق.';
+  if (o.m === t.m && o.h !== t.h && t.m > 0)
+    return 'العقرب القصير يمشي ببطء بين رقمين. انظر إلى <b>الرقم الذي تجاوزه</b>، لا الرقم الذي يقترب منه.';
+  if (o.m !== t.m)
+    return 'كل رقم على الساعة يساوي <b>5 دقائق</b> للعقرب الطويل: عند 3 يعني 15 دقيقة، وعند 6 يعني 30 دقيقة.';
+  return 'العقرب <b>القصير</b> يشير إلى الساعة، والعقرب <b>الطويل</b> يشير إلى الدقائق.';
+}
+
+function endGame(){
+  const k = 'clock-best-' + level + '-' + mode;
+  const best = Math.max(store.get(k), score);
+  store.set(k, best);
+  const ratio = correct / ROUND;
+  const stars = ratio >= .9 ? 3 : ratio >= .6 ? 2 : ratio > 0 ? 1 : 0;
+  $('starsEl').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  $('endTitle').textContent = lives <= 0 ? 'انتهت المحاولات!' : stars === 3 ? 'بطل الساعة! 🏆' : stars === 2 ? 'أحسنت!' : 'حاول مرة أخرى 💪';
+  $('finalScore').textContent = score;
+  $('endInfo').textContent = 'أجبت ' + correct + ' من ' + ROUND + ' صحيحة · أفضل نتيجة: ' + best;
+  const list = $('reviewList');
+  list.innerHTML = '';
+  mistakes.forEach(t => {
+    const li = document.createElement('li');
+    li.appendChild(clockSVG(t, digital(t)));
+    const s = document.createElement('span'); s.textContent = digital(t);
+    li.appendChild(s);
+    list.appendChild(li);
+  });
+  $('review').hidden = mistakes.length === 0;
+  show('end');
+  $('againBtn').focus();
+}
+
+$('startBtn').addEventListener('click', startGame);
+$('againBtn').addEventListener('click', startGame);
+$('changeBtn').addEventListener('click', () => { refresh(); show('start'); });
+$('nextBtn').addEventListener('click', nextQuestion);
+window.addEventListener('keydown', e => {
+  if (!screens.play.classList.contains('show')) return;
+  if (locked && (e.key === 'Enter' || e.key === ' ') && document.activeElement !== $('nextBtn')) { e.preventDefault(); $('nextBtn').click(); return; }
+  if (locked) return;
+  const btn = $('answers').querySelector('[data-key="' + e.key + '"]');
+  if (btn) btn.click();
+});
+</script>
+</body>
+</html>
