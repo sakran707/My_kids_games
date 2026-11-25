@@ -286,11 +286,90 @@
         border-top: 1px solid var(--line);
       }
 
+      /* ── بطاقات الأطفال (مريم وأحمد) ── */
+      .kids {
+        padding: 0 0 64px;
+      }
+      .kids-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 260px));
+        justify-content: center;
+        gap: 20px;
+      }
+      .kid-card {
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        overflow: hidden;
+        text-align: center;
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .kid-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+      }
+      .kid-photo {
+        aspect-ratio: 4 / 5;
+        background: var(--gray-bg);
+        display: grid;
+        place-items: center;
+        font-size: 64px;
+        font-weight: 600;
+        color: var(--text-2);
+      }
+      .kid-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .kid-card h3 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 16px 12px 0;
+      }
+      .kid-card p {
+        color: var(--text-2);
+        font-size: 15px;
+        margin: 2px 12px 0;
+      }
+      .kid-card .kid-school {
+        font-size: 13px;
+        line-height: 1.4;
+        margin-top: 6px;
+      }
+      .kid-card .kid-count {
+        display: inline-block;
+        background: var(--gray-bg);
+        color: var(--text);
+        font-size: 13px;
+        padding: 3px 12px;
+        border-radius: 980px;
+        margin: 12px 0 18px;
+      }
+      @media (max-width: 420px) {
+        .kids-grid {
+          gap: 12px;
+        }
+        .kid-card h3 {
+          font-size: 16px;
+        }
+        .kid-card p {
+          font-size: 13px;
+        }
+        .kid-card .kid-school {
+          font-size: 12px;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         * {
           transition: none !important;
         }
-        .card:hover {
+        .card:hover,
+        .kid-card:hover {
           transform: none;
         }
       }
@@ -307,6 +386,12 @@
       <p class="lead">
         اختر لعبة واضغط «العب» لتعمل مباشرةً في متصفحك — دون حساب ودون تنصيب.
       </p>
+    </section>
+
+    <section class="kids">
+      <div class="wrap">
+        <div class="kids-grid" id="kidsGrid"></div>
+      </div>
     </section>
 
     <section class="section-gray">
@@ -396,6 +481,58 @@
           emoji: "🎈",
         },
       ];
+
+      /* بطاقات الأطفال: الصورة داخل مجلد images/ */
+      const KIDS = [
+        {
+          name: "مريم",
+          fullName: "مريم عمار الوائلي",
+          grade: "الصف الخامس أ",
+          photo: "images/maryam.jpg",
+        },
+        {
+          name: "احمد",
+          fullName: "احمد عمار الوائلي",
+          grade: "الصف الثالث أ",
+          photo: "images/ahmed.jpg",
+        },
+      ];
+      const SCHOOL =
+        "مدرسة العفة الاساسية ذات المعايير الدولية - مدينة بسماية الجميلة";
+      const norm = (s) => s.trim().replace(/[أإآ]/g, "ا");
+      const kidsGrid = document.getElementById("kidsGrid");
+      KIDS.forEach((k) => {
+        const count = GAMES.filter((g) => norm(g.kid) === norm(k.name)).length;
+        const card = document.createElement("article");
+        card.className = "kid-card";
+
+        const photo = document.createElement("div");
+        photo.className = "kid-photo";
+        const img = document.createElement("img");
+        img.src = k.photo;
+        img.alt = k.name;
+        img.loading = "lazy";
+        img.onerror = () => {
+          img.remove();
+          photo.textContent = k.name.charAt(0);
+        };
+        photo.appendChild(img);
+
+        const h3 = document.createElement("h3");
+        h3.textContent = k.fullName;
+        const grade = document.createElement("p");
+        grade.className = "kid-grade";
+        grade.textContent = k.grade;
+        const school = document.createElement("p");
+        school.className = "kid-school";
+        school.textContent = SCHOOL;
+        const p = document.createElement("p");
+        p.className = "kid-count";
+        p.textContent = count === 1 ? "لعبة واحدة" : count === 2 ? "لعبتان" : `${count} ألعاب`;
+
+        card.append(photo, h3, grade, school, p);
+        kidsGrid.appendChild(card);
+      });
 
       /* بناء البطاقات من القائمة */
       const grid = document.getElementById("grid");
