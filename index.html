@@ -832,6 +832,9 @@
               file (اسم ملف HTML داخل مجلد games/) · emoji (رمز)
    لإضافة لعبة: انسخ سطر { ... } كاملاً وعدّل قيمه.
    ══════════════════════════════════════════════════════════ */
+      /* رقم نسخة الألعاب: غيّره بعد أي تعديل على ملفات الألعاب حتى المتصفحات تجيب النسخة الجديدة فوراً */
+      const GAMES_VERSION = "2026-11-26-1";
+
       const GAMES = [
         {
           title: "قصة الحقيبة المتحركة",
@@ -1130,7 +1133,7 @@
 
         loader.classList.remove("done");
         frame.onload = () => loader.classList.add("done");
-        frame.src = "games/" + g.file;
+        frame.src = "games/" + g.file + "?v=" + GAMES_VERSION;
       }
       function closeGame() {
         modal.classList.remove("open");
