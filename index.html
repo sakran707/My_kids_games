@@ -21,6 +21,18 @@
       content="ألعاب صمّمناها من دورة سكراتش  — العب مباشرةً في المتصفح دون حساب ودون تنصيب."
     />
     <meta property="og:locale" content="ar_AR" />
+    <meta property="og:url" content="https://sakran707.github.io/My_kids_games/" />
+    <meta property="og:image" content="https://sakran707.github.io/My_kids_games/images/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ألعابنا" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E"
@@ -505,6 +517,123 @@
         }
       }
 
+      /* ── قسم الألعاب التعليمية + الوصف + شارة جديد ── */
+      .section-title {
+        margin-bottom: 8px;
+      }
+      .section-sub {
+        text-align: center;
+        color: var(--text-2);
+        font-size: 17px;
+        margin-bottom: 36px;
+      }
+      .section-edu {
+        background: var(--white);
+        padding: 60px 0 80px;
+      }
+      .section-edu .card {
+        background: var(--gray-bg);
+      }
+      .section-edu .thumb {
+        background: var(--white);
+      }
+      .card {
+        position: relative;
+      }
+      .card .desc {
+        color: var(--text-2);
+        font-size: 15px;
+        line-height: 1.5;
+        margin: -14px 0 20px;
+        max-width: 260px;
+      }
+      .badge {
+        position: absolute;
+        top: 14px;
+        inset-inline-start: 14px;
+        background: var(--blue);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 980px;
+      }
+
+      /* على الموبايل: بطاقتين بكل صف */
+      @media (max-width: 600px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+        .card {
+          padding: 20px 10px 16px;
+          border-radius: 16px;
+        }
+        .thumb {
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
+          font-size: 32px;
+          margin-bottom: 12px;
+        }
+        .card h3 {
+          font-size: 17px;
+        }
+        .card .kid {
+          font-size: 13px;
+          margin-bottom: 14px;
+        }
+        .card .desc {
+          font-size: 13px;
+          margin: -8px 0 14px;
+        }
+        .card .btn {
+          margin-top: auto;
+          font-size: 16px;
+          padding: 0 22px;
+        }
+        .badge {
+          top: 8px;
+          inset-inline-start: 8px;
+          font-size: 11px;
+          padding: 2px 8px;
+        }
+        .section-gray,
+        .section-edu {
+          padding: 44px 0 56px;
+        }
+        .section-sub {
+          font-size: 15px;
+          margin-bottom: 28px;
+        }
+      }
+
+      /* ── الوضع الداكن ── */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --white: #1c1c1e;
+          --gray-bg: #111113;
+          --text: #f5f5f7;
+          --text-2: #a1a1a6;
+          --blue: #2997ff;
+          --blue-hover: #47a3ff;
+          --line: #38383a;
+        }
+        .nav {
+          background: rgba(28, 28, 30, 0.8);
+        }
+        .icon-btn:hover {
+          background: var(--line);
+        }
+        .card:hover,
+        .kid-card:hover {
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+        }
+        .player {
+          box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         * {
           transition: none !important;
@@ -538,11 +667,20 @@
       </div>
     </section>
 
-    <section class="section-gray">
+    <section class="section-gray" id="kidsGames">
       <div class="wrap">
-        <h2 class="section-title">المجموعة</h2>
+        <h2 class="section-title">من إبداع مريم واحمد</h2>
+        <p class="section-sub">ألعاب صمّماها بسكراتش</p>
         <div class="filters" id="filters" role="group" aria-label="فلترة الألعاب"></div>
         <div class="grid" id="grid"></div>
+      </div>
+    </section>
+
+    <section class="section-edu" id="eduGames">
+      <div class="wrap">
+        <h2 class="section-title">ألعاب تعليمية</h2>
+        <p class="section-sub">نتعلّم ونحن نلعب: حساب، لغة عربية، إنكليزي، وأكثر</p>
+        <div class="grid" id="eduGrid"></div>
       </div>
     </section>
 
@@ -601,56 +739,56 @@
         {
           title: "قصة الحقيبة المتحركة",
           kid: "مريم",
-          file: "bag-story.html",
+          file: "bag-story.html", desc: "اجمع أغراض المدرسة فقط وابتعد عن الألعاب",
           emoji: "🎒",
         },
         {
           title: "مغامرة الفضاء",
           kid: "أحمد",
-          file: "space.html",
+          file: "space.html", desc: "قُد المركبة، تجنّب الكويكبات واجمع النجوم",
           emoji: "🚀",
         },
-        { title: "قطف التفاح", kid: "مريم", file: "apples.html", emoji: "🍎" },
-        { title: "متاهة الغابة", kid: "مريم", file: "maze.html", emoji: "🌲" },
-        { title: "سباق السيارات", kid: "احمد", file: "race.html", emoji: "🏎️" },
-        { title: "صياد النجوم", kid: "مريم", file: "stars.html", emoji: "⭐" },
+        { title: "قطف التفاح", kid: "مريم", file: "apples.html", desc: "التقط التفاح المتساقط بالسلة", emoji: "🍎" },
+        { title: "متاهة الغابة", kid: "مريم", file: "maze.html", desc: "أوصل السنجاب إلى خط النهاية", emoji: "🌲" },
+        { title: "سباق السيارات", kid: "احمد", file: "race.html", desc: "بدّل المسار وتفادَ السيارات الأخرى", emoji: "🏎️" },
+        { title: "صياد النجوم", kid: "مريم", file: "stars.html", desc: "اضغط النجوم بسرعة قبل أن تختفي", emoji: "⭐" },
         {
           title: "لعبة الأفعى",
           kid: "مريم",
-          file: "snake.html",
+          file: "snake.html", desc: "كُل التفاح وكبّر الأفعى بدون أن تصطدم",
           emoji: "🐍",
         },
         {
           title: "لعبة البالون",
           kid: "احمد",
-          file: "balloon.html",
+          file: "balloon.html", desc: "فرقع البالونات واجمع النقاط",
           emoji: "🎈",
         },
         {
           title: "بطل جدول الضرب",
           kid: "مريم واحمد",
-          file: "multiply.html",
+          file: "multiply.html", desc: "10 أسئلة سريعة على جداول الضرب من 2 إلى 10", added: "2026-11-26",
           emoji: "🔢",
           edu: true, // لعبة تعليمية (مو من إبداع الأطفال)
         },
         {
           title: "كلمات إنكليزية",
           kid: "مريم واحمد",
-          file: "english.html",
+          file: "english.html", desc: "كلمات بالصور والنطق: حيوانات، طعام، ألوان…", added: "2026-11-26",
           emoji: "🔤",
           edu: true,
         },
         {
           title: "الإملاء العربي",
           kid: "مريم واحمد",
-          file: "arabic.html",
+          file: "arabic.html", desc: "التاء المربوطة، الهمزة، الألف المقصورة وغيرها", added: "2026-11-26",
           emoji: "✍️",
           edu: true,
         },
         {
           title: "قراءة الساعة",
           kid: "مريم واحمد",
-          file: "clock.html",
+          file: "clock.html", desc: "اقرأ الساعة بالعقارب: تماماً، والنصف، والربع", added: "2026-11-26",
           emoji: "🕐",
           edu: true,
         },
@@ -756,6 +894,7 @@
 
       /* بناء البطاقات من القائمة */
       const grid = document.getElementById("grid");
+      const eduGrid = document.getElementById("eduGrid");
       GAMES.forEach((g) => {
         const card = document.createElement("article");
         card.className = "card";
@@ -778,12 +917,26 @@
         btn.textContent = "العب";
         btn.addEventListener("click", (e) => openGame(g, e.currentTarget));
 
-        card.append(thumb, h3, kid, btn);
+        card.append(thumb, h3, kid);
+        if (g.desc) {
+          const desc = document.createElement("p");
+          desc.className = "desc";
+          desc.textContent = g.desc;
+          card.appendChild(desc);
+        }
+        card.appendChild(btn);
+        /* شارة «جديد» تختفي وحدها بعد 21 يوم من تاريخ الإضافة */
+        if (g.added && Date.now() - new Date(g.added).getTime() < 21 * 864e5) {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = "جديد";
+          card.appendChild(badge);
+        }
         card.dataset.kid = norm(g.kid);
         card.addEventListener("click", (e) => {
           if (e.target !== btn) openGame(g, btn);
         });
-        grid.appendChild(card);
+        (g.edu ? eduGrid : grid).appendChild(card);
       });
 
       /* تشغيل / إغلاق نافذة اللعبة */
