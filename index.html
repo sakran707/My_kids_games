@@ -700,6 +700,26 @@
         }
       }
 
+      #closeBtn {
+        width: auto !important;
+        padding: 0 18px;
+        border-radius: 980px;
+        background: var(--text);
+        color: var(--white);
+        font-family: var(--font);
+        font-size: 16px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #closeBtn:hover {
+        background: #3a3a3c;
+      }
+      #closeBtn:active {
+        transform: scale(0.95);
+      }
+
       @media (prefers-reduced-motion: reduce) {
         * {
           transition: none !important;
@@ -787,10 +807,10 @@
           <button
             class="icon-btn"
             id="closeBtn"
-            title="إغلاق"
-            aria-label="إغلاق"
+            title="خروج من اللعبة"
+            aria-label="خروج من اللعبة والرجوع للصفحة الرئيسية"
           >
-            ✕
+            <span aria-hidden="true">✕</span> خروج
           </button>
         </div>
         <div class="stage" id="stage">
@@ -804,7 +824,7 @@
       </div>
     </div>
 
-    <script src="games/progress.js?v=4"></script>
+    <script src="games/progress.js?v=5"></script>
     <script>
       /* ══════════════════════════════════════════════════════════
    قائمة الألعاب — هنا فقط تضيف أو تعدّل الألعاب
@@ -1123,6 +1143,12 @@
       }
 
       closeBtn.addEventListener("click", closeGame);
+      /* زر «الرئيسية» داخل اللعبة يطلب سد النافذة */
+      window.addEventListener("message", (e) => {
+        if (e.source !== frame.contentWindow || !e.data || e.data.type !== "close-game") return;
+        if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+        if (modal.classList.contains("open")) closeGame();
+      });
       fsBtn.addEventListener("click", () => {
         const el = frame;
         const request =
