@@ -559,6 +559,97 @@
         border-radius: 980px;
       }
 
+      /* ── إنجازاتي ── */
+      .ach-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin: 24px 0 28px;
+      }
+      .ach-stat {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 16px 8px;
+        text-align: center;
+      }
+      .ach-stat b {
+        display: block;
+        font-size: 30px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .ach-stat span {
+        color: var(--text-2);
+        font-size: 14px;
+      }
+      .ach-badges {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+      }
+      .ach-badge {
+        background: var(--white);
+        border: 1px solid transparent;
+        border-radius: 16px;
+        padding: 16px 10px;
+        text-align: center;
+        transition: transform 0.2s ease;
+      }
+      .ach-badge:hover {
+        transform: translateY(-2px);
+      }
+      .ach-badge .ic {
+        font-size: 38px;
+        line-height: 1.2;
+      }
+      .ach-badge h4 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-top: 6px;
+      }
+      .ach-badge p {
+        font-size: 12px;
+        color: var(--text-2);
+        margin-top: 2px;
+      }
+      .ach-badge.locked .ic {
+        filter: grayscale(1);
+        opacity: 0.35;
+      }
+      .ach-badge.locked h4 {
+        color: var(--text-2);
+      }
+      .ach-badge.earned {
+        border-color: var(--blue);
+      }
+      .ach-count {
+        text-align: center;
+        color: var(--text-2);
+        font-size: 15px;
+        margin-bottom: 14px;
+      }
+      @media (max-width: 600px) {
+        .ach-stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .ach-badges {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .ach-badge {
+          padding: 12px 6px;
+        }
+        .ach-badge .ic {
+          font-size: 30px;
+        }
+        .ach-badge h4 {
+          font-size: 13px;
+        }
+        .ach-badge p {
+          font-size: 11px;
+        }
+      }
+
       /* على الموبايل: بطاقتين بكل صف */
       @media (max-width: 600px) {
         .grid {
@@ -684,6 +775,16 @@
       </div>
     </section>
 
+    <section class="section-gray" id="achievements">
+      <div class="wrap">
+        <h2 class="section-title">إنجازاتي 🏆</h2>
+        <p class="section-sub">العب الألعاب التعليمية واجمع النجوم والشارات</p>
+        <div id="achPlayer"></div>
+        <div class="ach-stats" id="achStats"></div>
+        <div class="ach-badges" id="achBadges"></div>
+      </div>
+    </section>
+
     <footer>
       صُمّمت الألعاب بواسطة مريم عمار الوائلي و احمد عمار الوائلي نتمنى ان
       تكونوا استمتعتوا باللعب
@@ -728,6 +829,7 @@
       </div>
     </div>
 
+    <script src="games/progress.js"></script>
     <script>
       /* ══════════════════════════════════════════════════════════
    قائمة الألعاب — هنا فقط تضيف أو تعدّل الألعاب
@@ -939,6 +1041,56 @@
         (g.edu ? eduGrid : grid).appendChild(card);
       });
 
+      /* إنجازاتي: النجوم والشارات من ملف games/progress.js */
+      function renderAchievements() {
+        if (!window.Progress) return;
+        const s = Progress.stats();
+        const tiles = [
+          [s.stars, "نجمة ⭐"],
+          [Progress.streakOf(s.days), "أيام متتالية 🔥"],
+          [s.correct, "جواب صحيح ✅"],
+          [s.rounds, "جولة 🎮"],
+        ];
+        const statsEl = document.getElementById("achStats");
+        statsEl.innerHTML = "";
+        tiles.forEach(([n, label]) => {
+          const d = document.createElement("div");
+          d.className = "ach-stat";
+          const b = document.createElement("b");
+          b.textContent = n;
+          const sp = document.createElement("span");
+          sp.textContent = label;
+          d.append(b, sp);
+          statsEl.appendChild(d);
+        });
+        const badgesEl = document.getElementById("achBadges");
+        badgesEl.innerHTML = "";
+        const earned = Progress.BADGES.filter((b) => b[4](s)).length;
+        const count = document.createElement("p");
+        count.className = "ach-count";
+        count.style.gridColumn = "1 / -1";
+        count.textContent = `الشارات: ${earned} من ${Progress.BADGES.length}`;
+        badgesEl.appendChild(count);
+        Progress.BADGES.forEach(([id, ic, name, how, test]) => {
+          const ok = test(s);
+          const d = document.createElement("div");
+          d.className = "ach-badge " + (ok ? "earned" : "locked");
+          const i = document.createElement("div");
+          i.className = "ic";
+          i.textContent = ic;
+          const h = document.createElement("h4");
+          h.textContent = name;
+          const p = document.createElement("p");
+          p.textContent = ok ? "✓ حصلت عليها" : how;
+          d.append(i, h, p);
+          badgesEl.appendChild(d);
+        });
+      }
+      if (window.Progress) {
+        Progress.mountPlayerPicker(document.getElementById("achPlayer"), renderAchievements);
+        renderAchievements();
+      }
+
       /* تشغيل / إغلاق نافذة اللعبة */
       const modal = document.getElementById("modal");
       const frame = document.getElementById("frame");
@@ -968,6 +1120,7 @@
         modal.classList.remove("open");
         frame.onload = null;
         frame.src = "";
+        renderAchievements();
         document.body.style.overflow = "";
         if (lastFocused && typeof lastFocused.focus === "function")
           lastFocused.focus();

@@ -131,6 +131,7 @@
     <section class="screen show" id="startScreen">
       <h2>اكتب صح!</h2>
       <p class="muted">10 أسئلة · بعد كل جواب تظهر القاعدة</p>
+      <div id="playerPick"></div>
       <p class="label">الدرس</p>
       <div class="picks" id="topics"></div>
       <p class="label">طريقة اللعب</p>
@@ -162,6 +163,7 @@
         <h3>تدرّب على كتابة هذه الكلمات:</h3>
         <ul id="reviewList"></ul>
       </div>
+      <div id="newBadges" hidden></div>
       <div class="actions">
         <button class="btn" id="againBtn" type="button">العب مرة أخرى</button>
         <button class="btn ghost" id="changeBtn" type="button">غيّر الدرس</button>
@@ -171,6 +173,7 @@
 
   <div class="hint-bar">اختر الكتابة الصحيحة · يمكنك استخدام الأرقام 1 إلى 4 من لوحة المفاتيح</div>
 
+<script src="progress.js"></script>
 <script>
 /* الدروس: الحروف المقصودة + القاعدة + الكلمات [الكلمة, الرمز, قاعدة خاصة اختيارية] */
 const TOPICS = {
@@ -441,6 +444,7 @@ function endGame(){
   const ratio = correct / total;
   const stars = ratio >= .9 ? 3 : ratio >= .6 ? 2 : ratio > 0 ? 1 : 0;
   $('starsEl').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  if (window.Progress) Progress.celebrate($('newBadges'), Progress.record('arabic', { stars, correct, total: total, score }));
   $('endTitle').textContent = lives <= 0 ? 'انتهت المحاولات!' : stars === 3 ? 'بطل الإملاء! 🏆' : stars === 2 ? 'أحسنت!' : 'حاول مرة أخرى 💪';
   $('finalScore').textContent = score;
   $('endInfo').textContent = 'أجبت ' + correct + ' من ' + total + ' صحيحة · أفضل نتيجة: ' + best;
@@ -470,6 +474,7 @@ window.addEventListener('keydown', e => {
   const btn = $('answers').querySelector('[data-key="' + e.key + '"]');
   if (btn) btn.click();
 });
+if (window.Progress) Progress.mountPlayerPicker($('playerPick'));
 </script>
 </body>
 </html>
