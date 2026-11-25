@@ -19,7 +19,7 @@
   .pg-home:hover{opacity:.85}
   .pg-home:active{transform:scale(.95)}
   .pg-home:focus-visible{outline:3px solid #0071e3;outline-offset:3px}
-  .pg-home.float{position:fixed;top:10px;left:10px;z-index:2147483647;opacity:.9;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .pg-home.float{position:fixed;top:10px;right:10px;z-index:2147483647;opacity:.9;box-shadow:0 4px 14px rgba(0,0,0,.25)}
   ${header ? `header{flex-wrap:nowrap}
   header h1{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   header .stats{flex-shrink:0}` : ''}
